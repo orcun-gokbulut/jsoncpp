@@ -1,5 +1,5 @@
 /*******************************************************************************
- JsonCpp - Json.h
+ JsonCpp - JsonTokenizer.h
  ------------------------------------------------------------------------------
  Copyright (c) 2022, Yiğit Orçun GÖKBULUT. All rights Reserved.
 
@@ -28,63 +28,47 @@
 #include <string>
 #include <vector>
 
-enum class JsonValueType
+#define NEXT_TOKEN() parser.RequestToken(); if (token == nullptr) return false;
+
+enum class JsonTokenType
 {
-    Undefined,
-    Object,
-    Array,
-    String,
-    Numeric,
-    Boolean,
-    Null
+    Unknown,
+    ObjectOpen,
+    ObjectClose,
+    ArrayOpen,
+    ArrayClose,
+    Identifier,
+    StringLiteral,
+    NumericLiteral,
+    Assingment,
+    Comma
 };
 
-class JsonProperty;
-class JsonTokenizer;
-
-class JsonToStringOptions
+class JsonToken
 {
     public:
-        bool minmalize;
-        const char* tabString;
+        JsonTokenType Type;
+        std::string Parameter;
+        size_t LineNumber;
+        size_t ColumnNumber;
 
-        static JsonToStringOptions Default;
+        void Reset();
+
+        JsonToken();
 };
 
-class JsonValue
+class JsonTokenizer
 {
-    friend class JsonProperty;
-    friend class JsonTokenizer;
     private:
-        bool ParseInternal(JsonTokenizer& parser);
-        std::string ToStringInternal(size_t tabDepth, const JsonToStringOptions& options);
+        std::vector<JsonToken> Tokens;
+        JsonToken* Current;
+
 
     public:
-        JsonValueType Type;
-        std::string String;
-        double Numeric;
-        bool Boolean;
-        std::vector<JsonValue*> Array;
-        std::vector<JsonProperty*> Properties;
+        bool Tokenize(const char* jsonText);
 
-        bool Parse(const char* jsonText);
-        std::string ToString(const JsonToStringOptions& options = JsonToStringOptions::Default);
+        const JsonToken* RequestToken();
+        void DeferToken();
 
-        JsonValue();
-        ~JsonValue();
-};
-
-class JsonProperty
-{
-    friend class JsonValue;
-    private:
-        bool ParseInternal(JsonTokenizer& parser);
-        std::string ToStringInternal(size_t depth, const JsonToStringOptions& options);
-
-    public:
-        std::string Name;
-        JsonValue Value;
-
-        JsonProperty();
-        ~JsonProperty();
+        JsonTokenizer();
 };

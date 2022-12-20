@@ -2,13 +2,32 @@
 	"version": "2.0.0",
 	"tasks": [
         {
+            "label": "Create Build Directory",
+            "type": "shell",
+            "command": "mkdir",
+            "args": [
+                "-p",
+                "${workspaceFolder}/build"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Configure - Debug",
             "type": "shell",
             "command": "cmake",
             "args": [
                 "-DCMAKE_BUILD_TYPE=Debug",
+                "-DBUILD_EXAMPLE=true",
                 "-DCMAKE_INSTALL_PREFIX=./output",
-                ".."
+                "${workspaceFolder}"
             ],
             "options": {
                 "cwd": "${workspaceFolder}/build"
@@ -20,7 +39,11 @@
                 "panel": "shared",
                 "showReuseMessage": true,
                 "clear": false
-            }
+            },
+            "problemMatcher": [],
+            "dependsOn":[
+                "Create Build Directory"
+            ]
         },
         {
             "label": "Configure - Release",
@@ -29,7 +52,7 @@
             "args": [
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DCMAKE_INSTALL_PREFIX=./output",
-                ".."
+                "${workspaceFolder}"
             ],
             "options": {
                 "cwd": "${workspaceFolder}/build"
@@ -39,7 +62,10 @@
                 "reveal": "always",
                 "showReuseMessage": false
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "dependsOn":[
+                "Create Build Directory"
+            ]
         },
         {
             "label": "Build",
@@ -57,7 +83,11 @@
                 "echo": false,
                 "reveal": "always",
                 "showReuseMessage": false
-            }
+            },
+            "problemMatcher": [
+                "$gcc",
+                "$msCompile"
+            ]
         },
         {
             "label": "Clean",

@@ -27,6 +27,7 @@ cmake_minimum_required(VERSION 3.10)
 
 set(sources
     Json.cpp
+    JsonTokenizer.cpp
 )
 
 set(headers
@@ -47,8 +48,8 @@ target_include_directories(
 install(TARGETS jsoncpp)
 
 
-set(BUILD_EXAMPLE false CACHE BOOL "Build example program.")
+set(BUILD_EXAMPLE false CACHE BOOL "Build test program.")
 if (${BUILD_EXAMPLE})
-    add_executable(jsoncpp.example Json.example.cpp)
-    target_link_libraries(jsoncpp.example jsoncpp)
+    add_executable(jsoncpp.test Json.test.cpp)
+    target_link_libraries(jsoncpp.test jsoncpp)
 endif()
