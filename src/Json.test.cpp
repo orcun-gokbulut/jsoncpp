@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         buffer += chunk;
     }
 
-    JsonValue root;
+    Json root;
     if (!root.Parse(buffer.c_str()))
         return EXIT_FAILURE;
 

@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-enum class JsonValueType
+enum class JsonType
 {
     Undefined,
     Object,
@@ -51,39 +51,83 @@ class JsonToStringOptions
         static JsonToStringOptions Default;
 };
 
-class JsonValue
+class Json
 {
     friend class JsonProperty;
     friend class JsonTokenizer;
     private:
+        JsonType Type;
+        std::string ValueString;
+        double ValueNumeric;
+        bool ValueBoolean;
+        std::vector<Json> ValueArray;
+        std::vector<JsonProperty> ValueProperties;
+
+        void SetType(JsonType Type);
+
         bool ParseInternal(JsonTokenizer& parser);
         std::string ToStringInternal(size_t tabDepth, const JsonToStringOptions& options);
 
     public:
-        JsonValueType Type;
-        std::string String;
-        double Numeric;
-        bool Boolean;
-        std::vector<JsonValue*> Array;
-        std::vector<JsonProperty*> Properties;
+        JsonType GetType() const;
 
-        bool Parse(const char* jsonText);
+        void SetUndefined();
+        bool IsUndefined() const;
+
+        void SetNull();
+        bool IsNull() const;
+
+        void SetString(const std::string& value);
+        const std::string& GetString() const;
+
+        void SetNumeric(double value);
+        double GetNumeric() const;
+
+        void SetBoolean(bool value);
+        bool GetBoolean() const;
+
+        JsonProperty& AddObjectProperty(const std::string& name);
+        const std::vector<JsonProperty>& GetObjectProperties() const;
+        void RemoveObjectProperty(const std::string& name);
+
+        void SetObjectProperty(const std::string& name, const Json& value);
+        Json& GetObjectProperty(const std::string& name);
+        const Json& GetObjectProperty(const std::string& name) const;
+
+        void AppendArrayItem(const Json& Value);
+        void InsertArrayItem(size_t index, const Json& value);
+        void RemoveArrayItem(size_t index);
+        const std::vector<Json>& GetArrayItems() const;
+
+        void SetArrayItem(size_t index, const Json& value);
+        Json& GetArrayItem(size_t index);
+        const Json& GetArrayItem(size_t index) const;
+
+        bool Parse(const std::string& jsonText);
         std::string ToString(const JsonToStringOptions& options = JsonToStringOptions::Default);
 
-        JsonValue();
-        ~JsonValue();
+        Json();
+        Json(JsonType type);
+        Json(const Json& other) = default;
+        Json(const std::string& string);
+        Json(double numeric);
+        Json(bool boolean);
+
+        static Json Undefined;
+        static Json Null;
 };
+
 
 class JsonProperty
 {
-    friend class JsonValue;
+    friend class Json;
     private:
         bool ParseInternal(JsonTokenizer& parser);
         std::string ToStringInternal(size_t depth, const JsonToStringOptions& options);
 
     public:
         std::string Name;
-        JsonValue Value;
+        Json Value;
 
         JsonProperty();
         ~JsonProperty();

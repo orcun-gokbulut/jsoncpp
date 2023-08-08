@@ -23,8 +23,10 @@
   Github: https://www.github.com/orcun-gokbulut/ZE
 *****************************************************************************]]
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.21)
 
-project(JsonCpp VERSION 0.0.1 LANGUAGES CXX)
+if(NOT PROJECT_IS_TOP_LEVEL)
+    project(JsonCpp VERSION 0.0.1 LANGUAGES CXX)
+endif()
 
 add_subdirectory(src)

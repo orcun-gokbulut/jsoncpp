@@ -26,7 +26,12 @@
 
 #include "Json.h"
 
+//#include "JsonProperty.h"
 #include "JsonTokenizer.h"
+
+static std::string EmptyString;
+Json Json::Undefined;
+Json Json::Null(JsonType::Null);
 
 JsonToStringOptions JsonToStringOptions::Default =
 {
@@ -34,7 +39,21 @@ JsonToStringOptions JsonToStringOptions::Default =
     "\t"
 };
 
-bool JsonValue::ParseInternal(JsonTokenizer& parser)
+void Json::SetType(JsonType type)
+{
+    if (this->Type == type)
+        return;
+
+    this->Type = type;
+
+    this->ValueNumeric = 0.0;
+    this->ValueBoolean = false;
+    this->ValueString.clear();
+    ValueProperties.clear();
+    ValueArray.clear();
+}
+
+bool Json::ParseInternal(JsonTokenizer& parser)
 {
     const JsonToken* token = NEXT_TOKEN();
     switch(token->Type)
@@ -43,17 +62,15 @@ bool JsonValue::ParseInternal(JsonTokenizer& parser)
         {
             if (token->Parameter == "true")
             {
-                this->Type = JsonValueType::Boolean;
-                this->Boolean = true;
+                SetBoolean(true);
             }
             else if (token->Parameter == "false")
             {
-                this->Type = JsonValueType::Boolean;
-                this->Boolean = false;
+                SetBoolean(false);
             }
             else if (token->Parameter == "null")
             {
-                this->Type = JsonValueType::Null;
+                SetNull();
             }
             else
             {
@@ -65,21 +82,19 @@ bool JsonValue::ParseInternal(JsonTokenizer& parser)
 
         case JsonTokenType::StringLiteral:
         {
-            this->Type = JsonValueType::String;
-            this->String = token->Parameter;
+            SetString(token->Parameter);
             break;
         }
 
         case JsonTokenType::NumericLiteral:
         {
-            this->Type = JsonValueType::Numeric;
-            this->Numeric = atof(token->Parameter.c_str());
+            SetNumeric(atof(token->Parameter.c_str()));
             break;
         }
 
         case JsonTokenType::ObjectOpen:
         {
-            this->Type = JsonValueType::Object;
+            this->Type = JsonType::Object;
 
             token = NEXT_TOKEN();
             if (token->Type == JsonTokenType::ObjectClose)
@@ -88,10 +103,9 @@ bool JsonValue::ParseInternal(JsonTokenizer& parser)
 
             while (true)
             {
-                JsonProperty* newProperty = new JsonProperty();
-                this->Properties.push_back(newProperty);
-
-                if (!newProperty->ParseInternal(parser))
+                this->ValueProperties.push_back(JsonProperty());
+                JsonProperty& newProperty = this->ValueProperties.back();
+                if (!newProperty.ParseInternal(parser))
                     return false;
 
                 token = NEXT_TOKEN();
@@ -115,7 +129,7 @@ bool JsonValue::ParseInternal(JsonTokenizer& parser)
 
         case JsonTokenType::ArrayOpen:
         {
-            this->Type = JsonValueType::Array;
+            this->Type = JsonType::Array;
 
             token = NEXT_TOKEN();
             if (token->Type == JsonTokenType::ArrayClose)
@@ -124,10 +138,10 @@ bool JsonValue::ParseInternal(JsonTokenizer& parser)
 
             while (true)
             {
-                JsonValue* newValue = new JsonValue();
-                this->Array.push_back(newValue);
-
-                if (!newValue->ParseInternal(parser))
+                Json newValue();
+                this->ValueArray.push_back(Json());
+                Json& newItem = this->ValueArray.back();
+                if (!newItem.ParseInternal(parser))
                     return false;
 
                 token = NEXT_TOKEN();
@@ -152,19 +166,19 @@ bool JsonValue::ParseInternal(JsonTokenizer& parser)
     return true;
 }
 
-std::string JsonValue::ToStringInternal(size_t tabDepth, const JsonToStringOptions& options)
+std::string Json::ToStringInternal(size_t tabDepth, const JsonToStringOptions& options)
 {
     switch (Type)
     {
         default:
-        case JsonValueType::Undefined:
+        case JsonType::Undefined:
         {
             return "undefined";
         }
 
-        case JsonValueType::Object:
+        case JsonType::Object:
         {
-            if (Properties.size() == 0)
+            if (ValueProperties.size() == 0)
                 return "{}";
 
             std::string tabSpace;
@@ -174,18 +188,18 @@ std::string JsonValue::ToStringInternal(size_t tabDepth, const JsonToStringOptio
             std::string output;
             output += tabSpace + "{\n";
 
-            for (size_t i = 0; i < Properties.size(); i++)
+            for (size_t i = 0; i < ValueProperties.size(); i++)
             {
-                output += tabSpace + options.tabString + Properties[i]->ToStringInternal(tabDepth + 1, options);
-                output += (i + 1 != Properties.size() ? ",\n" : "\n");
+                output += tabSpace + options.tabString + ValueProperties[i].ToStringInternal(tabDepth + 1, options);
+                output += (i + 1 != ValueProperties.size() ? ",\n" : "\n");
             }
             output += tabSpace + "}";
             return output;
         }
 
-        case JsonValueType::Array:
+        case JsonType::Array:
         {
-            if (Array.size() == 0)
+            if (ValueArray.size() == 0)
                 return "[]";
 
             std::string tabSpace;
@@ -195,118 +209,276 @@ std::string JsonValue::ToStringInternal(size_t tabDepth, const JsonToStringOptio
             std::string output;
             output += tabSpace + "[\n";
 
-            for (size_t i = 0; i < Array.size(); i++)
+            for (size_t i = 0; i < ValueArray.size(); i++)
             {
-                output += tabSpace + options.tabString + Array[i]->ToStringInternal(tabDepth + 1, options);
-                output += (i + 1 != Array.size() ? ",\n" : "\n");
+                output += tabSpace + options.tabString + ValueArray[i].ToStringInternal(tabDepth + 1, options);
+                output += (i + 1 != ValueArray.size() ? ",\n" : "\n");
             }
             output += tabSpace + "]";
             return output;
         }
 
-        case JsonValueType::String:
+        case JsonType::String:
         {
-            return std::string("\"") + String + "\"";
+            return std::string("\"") + ValueString + "\"";
         }
 
-        case JsonValueType::Numeric:
+        case JsonType::Numeric:
         {
-            if ((Numeric - (int64_t)Numeric) == 0.0)
-                return std::to_string((int64_t) Numeric);
+            if ((ValueNumeric - (int64_t)ValueNumeric) == 0.0)
+                return std::to_string((int64_t) ValueNumeric);
             else
-                return std::to_string(Numeric);
+                return std::to_string(ValueNumeric);
         }
 
-        case JsonValueType::Boolean:
+        case JsonType::Boolean:
         {
-            return (Boolean ? "true" : "false");
+            return (ValueBoolean ? "true" : "false");
         }
 
-        case JsonValueType::Null:
+        case JsonType::Null:
         {
             return "null";
         }
     }
 }
 
-bool JsonValue::Parse(const char* jsonText)
+JsonType Json::GetType() const
+{
+    return Type;
+}
+
+void Json::SetUndefined()
+{
+    SetType(JsonType::Undefined);
+}
+
+bool Json::IsUndefined() const
+{
+    return (GetType() == JsonType::Undefined);
+}
+
+void Json::SetNull()
+{
+    SetType(JsonType::Null);
+}
+
+bool Json::IsNull() const
+{
+    return (GetType() == JsonType::Null);
+}
+
+void Json::SetString(const std::string& value)
+{
+    SetType(JsonType::String);
+    ValueString = value;
+}
+
+const std::string& Json::GetString() const
+{
+    if (GetType() != JsonType::String)
+        return EmptyString;
+
+    return ValueString;
+}
+
+void Json::SetNumeric(double value)
+{
+    SetType(JsonType::Numeric);
+    ValueNumeric = value;
+}
+
+double Json::GetNumeric() const
+{
+    if (GetType() != JsonType::Numeric)
+        return 0.0;
+
+    return ValueNumeric;
+}
+
+void Json::SetBoolean(bool value)
+{
+    SetType(JsonType::Boolean);
+    ValueBoolean = value;
+}
+
+bool Json::GetBoolean() const
+{
+    if (GetType() != JsonType::Boolean)
+        return false;
+
+    return ValueBoolean;
+}
+
+JsonProperty& Json::AddObjectProperty(const std::string& name)
+{
+    SetType(JsonType::Object);
+    for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
+    {
+        if (iter->Name != name)
+            continue;
+
+        return *iter;
+    }
+}
+
+const std::vector<JsonProperty>& Json::GetObjectProperties() const
+{
+    return ValueProperties;
+}
+
+void Json::RemoveObjectProperty(const std::string& name)
+{
+    if (GetType() != JsonType::Object)
+        return;
+
+    for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
+    {
+        if (iter->Name != name)
+            continue;
+
+        ValueProperties.erase(iter);
+        return;
+    }
+}
+
+void Json::SetObjectProperty(const std::string& name, const Json& value)
+{
+    JsonProperty& property = AddObjectProperty(name);
+    property.Name = name;
+    property.Value = value;
+}
+
+Json& Json::GetObjectProperty(const std::string& name)
+{
+    if (GetType() != JsonType::Object)
+        return Json::Undefined;
+
+    for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
+    {
+        if (iter->Name == name)
+            return iter->Value;
+    }
+
+    return Json::Undefined;
+}
+
+const Json& Json::GetObjectProperty(const std::string& name) const
+{
+    if (GetType() != JsonType::Object)
+        return Json::Undefined;
+
+    for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
+    {
+        if (iter->Name == name)
+            return iter->Value;
+    }
+
+    return Json::Undefined;
+}
+
+void Json::AppendArrayItem(const Json& value)
+{
+    SetType(JsonType::Array);
+
+    ValueArray.insert(ValueArray.end(), value);
+}
+
+void Json::InsertArrayItem(size_t index, const Json& value)
+{
+    SetType(JsonType::Array);
+
+    if (index >= ValueProperties.size())
+        return;
+
+    this->Type = JsonType::Array;
+    ValueArray.insert(ValueArray.begin() + index, value);
+}
+
+void Json::RemoveArrayItem(size_t index)
+{
+    if (GetType() != JsonType::Array)
+        return;
+
+    if (index >= ValueArray.size())
+        return;
+
+    ValueArray.erase(ValueArray.begin() + index);
+}
+
+const std::vector<Json>& Json::GetArrayItems() const
+{
+    return ValueArray;
+}
+
+void Json::SetArrayItem(size_t index, const Json& value)
+{
+    if (GetType() != JsonType::Array)
+        return;
+
+    if (index >= ValueProperties.size())
+        return;
+
+    ValueArray[index] = value;
+}
+
+Json& Json::GetArrayItem(size_t index)
+{
+    if (GetType() != JsonType::Array)
+        return Json::Undefined;
+
+    if (index >= ValueProperties.size())
+        return Json::Undefined;
+
+    return ValueArray[index];
+}
+
+const Json& Json::GetArrayItem(size_t index) const
+{
+    if (GetType() != JsonType::Array)
+        return Json::Undefined;
+
+    if (index >= ValueProperties.size())
+        return Json::Undefined;
+
+    return ValueArray[index];
+}
+
+bool Json::Parse(const std::string& jsonText)
 {
     JsonTokenizer tokenizer;
-    if (!tokenizer.Tokenize(jsonText))
+    if (!tokenizer.Tokenize(jsonText.c_str()))
         return false;
+
     return ParseInternal(tokenizer);
 }
 
-std::string JsonValue::ToString(const JsonToStringOptions& options)
+std::string Json::ToString(const JsonToStringOptions& options)
 {
     return ToStringInternal(0, options);
 }
 
-JsonValue::JsonValue()
+Json::Json()
 {
-    this->Type = JsonValueType::Undefined;
-    this->Numeric = 0.0;
-    this->Boolean = false;
+    SetType(JsonType::Undefined);
 }
 
-JsonValue::~JsonValue()
+Json::Json(JsonType type)
 {
-    for (size_t i = 0; i < this->Array.size(); i++)
-        delete this->Array[i];
-    this->Array.clear();
-
-    for (size_t i = 0; i < this->Properties.size(); i++)
-        delete this->Properties[i];
-    this->Properties.clear();
+    SetType(type);
 }
 
-bool JsonProperty::ParseInternal(JsonTokenizer& parser)
+Json::Json(const std::string& string)
 {
-    const JsonToken* token = NEXT_TOKEN();
-    if (token->Type != JsonTokenType::StringLiteral &&
-        token->Type != JsonTokenType::Identifier &&
-        token->Type != JsonTokenType::NumericLiteral)
-    {
-        fprintf(stderr, "Error: Unexpected token '%s' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-        return false;
-    }
-    this->Name = token->Parameter;
-
-    token = NEXT_TOKEN();
-    if (token->Type != JsonTokenType::Assingment)
-    {
-        fprintf(stderr, "Error: Found '%s' instead of assignment operator ':' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-        return false;
-    }
-
-    if (!Value.ParseInternal(parser))
-        return false;
-
-    return true;
+    SetType(JsonType::String);
 }
 
-std::string JsonProperty::ToStringInternal(size_t tabDepth, const JsonToStringOptions& options)
+Json::Json(double numeric)
 {
-    std::string output;
-
-    output = std::string("\"") + Name + "\": ";
-
-    if ((Value.Type == JsonValueType::Object && Value.Properties.size() != 0) ||
-        (Value.Type == JsonValueType::Array && Value.Array.size() != 0))
-    {
-        output += "\n";
-    }
-    output += Value.ToStringInternal(tabDepth, options);
-
-    return output;
+    SetType(JsonType::Numeric);
 }
 
-JsonProperty::JsonProperty()
+Json::Json(bool boolean)
 {
-
-}
-
-JsonProperty::~JsonProperty()
-{
-
+    SetType(JsonType::Boolean);
 }
