@@ -8,12 +8,10 @@
             "name": "Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/src/jsoncpp.test",
-            "args": [
-                "test.json"
-            ],
+            "program": "${workspaceFolder}/Build/Sources/jsoncpp.test",
+            "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
+            "cwd": "${workspaceFolder}/Build",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
