@@ -26,18 +26,16 @@
 
 #include "Json.h"
 
-//#include "JsonProperty.h"
 #include "JsonTokenizer.h"
 
-static std::string EmptyString;
 Json Json::Undefined;
 Json Json::Null(JsonType::Null);
 
 JsonToStringOptions JsonToStringOptions::Default =
-{
-    false,
-    "\t"
-};
+    {
+        false,
+        "\t"
+    };
 
 void Json::SetType(JsonType type)
 {
@@ -56,7 +54,7 @@ void Json::SetType(JsonType type)
 bool Json::ParseInternal(JsonTokenizer& parser)
 {
     const JsonToken* token = NEXT_TOKEN();
-    switch(token->Type)
+    switch (token->Type)
     {
         case JsonTokenType::Identifier:
         {
@@ -74,8 +72,8 @@ bool Json::ParseInternal(JsonTokenizer& parser)
             }
             else
             {
-                fprintf(stderr, "Error: Unknown value identifier '%s' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-                return false;
+                throw JsonParsingFailedException(
+                    std::string("Unknown value identifier. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
             }
             break;
         }
@@ -119,8 +117,8 @@ bool Json::ParseInternal(JsonTokenizer& parser)
                 }
                 else
                 {
-                    fprintf(stderr, "Error: Found '%s' instead of closing array ']' or comma ',' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-                    return false;
+                    throw JsonParsingFailedException(
+                        std::string("Irrelevant token found instead of closing object block '}' or comma ','. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
                 }
             }
 
@@ -138,7 +136,7 @@ bool Json::ParseInternal(JsonTokenizer& parser)
 
             while (true)
             {
-                Json newValue();
+                Json newValue;
                 this->ValueArray.push_back(Json());
                 Json& newItem = this->ValueArray.back();
                 if (!newItem.ParseInternal(parser))
@@ -155,8 +153,8 @@ bool Json::ParseInternal(JsonTokenizer& parser)
                 }
                 else
                 {
-                    fprintf(stderr, "Error: Found '%s' instead of closing array ']' or comma ',' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-                    return false;
+                    throw JsonParsingFailedException(
+                        std::string("Irrelevant token found instead of closing array block ']' or comma ','. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
                 }
             }
             break;
@@ -226,7 +224,7 @@ std::string Json::ToStringInternal(size_t tabDepth, const JsonToStringOptions& o
         case JsonType::Numeric:
         {
             if ((ValueNumeric - (int64_t)ValueNumeric) == 0.0)
-                return std::to_string((int64_t) ValueNumeric);
+                return std::to_string((int64_t)ValueNumeric);
             else
                 return std::to_string(ValueNumeric);
         }
@@ -243,32 +241,32 @@ std::string Json::ToStringInternal(size_t tabDepth, const JsonToStringOptions& o
     }
 }
 
-JsonType Json::GetType() const
+JsonType Json::GetType() const noexcept
 {
     return Type;
 }
 
-void Json::SetUndefined()
+void Json::SetUndefined() noexcept
 {
     SetType(JsonType::Undefined);
 }
 
-bool Json::IsUndefined() const
+bool Json::IsUndefined() const noexcept
 {
     return (GetType() == JsonType::Undefined);
 }
 
-void Json::SetNull()
+void Json::SetNull() noexcept
 {
     SetType(JsonType::Null);
 }
 
-bool Json::IsNull() const
+bool Json::IsNull() const noexcept
 {
     return (GetType() == JsonType::Null);
 }
 
-void Json::SetString(const std::string& value)
+void Json::SetString(const std::string& value) noexcept
 {
     SetType(JsonType::String);
     ValueString = value;
@@ -277,12 +275,12 @@ void Json::SetString(const std::string& value)
 const std::string& Json::GetString() const
 {
     if (GetType() != JsonType::String)
-        return EmptyString;
+        throw JsonTypeMismatchException();
 
     return ValueString;
 }
 
-void Json::SetNumeric(double value)
+void Json::SetNumeric(double value) noexcept
 {
     SetType(JsonType::Numeric);
     ValueNumeric = value;
@@ -291,12 +289,12 @@ void Json::SetNumeric(double value)
 double Json::GetNumeric() const
 {
     if (GetType() != JsonType::Numeric)
-        return 0.0;
+        throw JsonTypeMismatchException();
 
     return ValueNumeric;
 }
 
-void Json::SetBoolean(bool value)
+void Json::SetBoolean(bool value) noexcept
 {
     SetType(JsonType::Boolean);
     ValueBoolean = value;
@@ -305,12 +303,12 @@ void Json::SetBoolean(bool value)
 bool Json::GetBoolean() const
 {
     if (GetType() != JsonType::Boolean)
-        return false;
+        throw JsonTypeMismatchException();
 
     return ValueBoolean;
 }
 
-JsonProperty& Json::AddObjectProperty(const std::string& name)
+JsonProperty &Json::AddObjectProperty(const std::string& name) noexcept
 {
     SetType(JsonType::Object);
     for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
@@ -320,17 +318,31 @@ JsonProperty& Json::AddObjectProperty(const std::string& name)
 
         return *iter;
     }
+
+    JsonProperty &newProperty = AddObjectProperty(name);
+    newProperty.Name = name;
+
+    return newProperty;
+}
+
+void Json::AddObjectProperty(const std::string& name, const Json& value) noexcept
+{
+    JsonProperty& newProprty = AddObjectProperty(name);
+    newProprty.Value = value;
 }
 
 const std::vector<JsonProperty>& Json::GetObjectProperties() const
 {
+    if (GetType() != JsonType::Object)
+        throw JsonTypeMismatchException();
+
     return ValueProperties;
 }
 
 void Json::RemoveObjectProperty(const std::string& name)
 {
     if (GetType() != JsonType::Object)
-        return;
+        throw JsonTypeMismatchException();
 
     for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
     {
@@ -342,17 +354,17 @@ void Json::RemoveObjectProperty(const std::string& name)
     }
 }
 
-void Json::SetObjectProperty(const std::string& name, const Json& value)
+void Json::SetObjectProperty(const std::string& name, const Json& value) noexcept
 {
     JsonProperty& property = AddObjectProperty(name);
     property.Name = name;
     property.Value = value;
 }
 
-Json& Json::GetObjectProperty(const std::string& name)
+Json &Json::GetObjectProperty(const std::string& name)
 {
     if (GetType() != JsonType::Object)
-        return Json::Undefined;
+        throw JsonTypeMismatchException();
 
     for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
     {
@@ -366,7 +378,7 @@ Json& Json::GetObjectProperty(const std::string& name)
 const Json& Json::GetObjectProperty(const std::string& name) const
 {
     if (GetType() != JsonType::Object)
-        return Json::Undefined;
+        throw JsonTypeMismatchException();
 
     for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
     {
@@ -377,11 +389,28 @@ const Json& Json::GetObjectProperty(const std::string& name) const
     return Json::Undefined;
 }
 
-void Json::AppendArrayItem(const Json& value)
+Json& Json::AppendArrayItem() noexcept
+{
+    SetType(JsonType::Array);
+
+    return *ValueArray.insert(ValueArray.end(), Json());
+}
+
+void Json::AppendArrayItem(const Json &value) noexcept
 {
     SetType(JsonType::Array);
 
     ValueArray.insert(ValueArray.end(), value);
+}
+
+Json& Json::InsertArrayItem(size_t index)
+{
+    SetType(JsonType::Array);
+
+    if (index >= ValueProperties.size())
+        throw JsonIndexOutOfRangeException();
+
+    return *ValueArray.insert(ValueArray.begin() + index, Json());
 }
 
 void Json::InsertArrayItem(size_t index, const Json& value)
@@ -389,7 +418,7 @@ void Json::InsertArrayItem(size_t index, const Json& value)
     SetType(JsonType::Array);
 
     if (index >= ValueProperties.size())
-        return;
+        throw JsonIndexOutOfRangeException();
 
     this->Type = JsonType::Array;
     ValueArray.insert(ValueArray.begin() + index, value);
@@ -398,26 +427,29 @@ void Json::InsertArrayItem(size_t index, const Json& value)
 void Json::RemoveArrayItem(size_t index)
 {
     if (GetType() != JsonType::Array)
-        return;
+        throw JsonTypeMismatchException();
 
     if (index >= ValueArray.size())
-        return;
+        throw JsonIndexOutOfRangeException();
 
     ValueArray.erase(ValueArray.begin() + index);
 }
 
 const std::vector<Json>& Json::GetArrayItems() const
 {
+    if (GetType() != JsonType::Array)
+        throw JsonTypeMismatchException();
+
     return ValueArray;
 }
 
 void Json::SetArrayItem(size_t index, const Json& value)
 {
     if (GetType() != JsonType::Array)
-        return;
+        throw JsonTypeMismatchException();
 
     if (index >= ValueProperties.size())
-        return;
+        throw JsonIndexOutOfRangeException();
 
     ValueArray[index] = value;
 }
@@ -425,10 +457,10 @@ void Json::SetArrayItem(size_t index, const Json& value)
 Json& Json::GetArrayItem(size_t index)
 {
     if (GetType() != JsonType::Array)
-        return Json::Undefined;
+        throw JsonTypeMismatchException();
 
     if (index >= ValueProperties.size())
-        return Json::Undefined;
+        throw JsonIndexOutOfRangeException();
 
     return ValueArray[index];
 }
@@ -436,7 +468,7 @@ Json& Json::GetArrayItem(size_t index)
 const Json& Json::GetArrayItem(size_t index) const
 {
     if (GetType() != JsonType::Array)
-        return Json::Undefined;
+        throw JsonTypeMismatchException();
 
     if (index >= ValueProperties.size())
         return Json::Undefined;
@@ -444,41 +476,45 @@ const Json& Json::GetArrayItem(size_t index) const
     return ValueArray[index];
 }
 
-bool Json::Parse(const std::string& jsonText)
+void Json::Parse(const std::string& jsonText)
 {
     JsonTokenizer tokenizer;
-    if (!tokenizer.Tokenize(jsonText.c_str()))
-        return false;
+    tokenizer.Tokenize(jsonText.c_str());
 
-    return ParseInternal(tokenizer);
+    ParseInternal(tokenizer);
 }
 
-std::string Json::ToString(const JsonToStringOptions& options)
+std::string Json::ToString(const JsonToStringOptions& options) noexcept
 {
     return ToStringInternal(0, options);
 }
 
-Json::Json()
+Json::Json() noexcept
 {
     SetType(JsonType::Undefined);
 }
 
-Json::Json(JsonType type)
+Json::Json(JsonType type) noexcept
 {
     SetType(type);
 }
 
-Json::Json(const std::string& string)
+Json::Json(const char* value) noexcept
 {
-    SetType(JsonType::String);
+    SetString(value);
 }
 
-Json::Json(double numeric)
+Json::Json(const std::string& value) noexcept
 {
-    SetType(JsonType::Numeric);
+    SetString(value);
 }
 
-Json::Json(bool boolean)
+Json::Json(double value) noexcept
 {
-    SetType(JsonType::Boolean);
+    SetNumeric(value);
+}
+
+Json::Json(bool value) noexcept
+{
+    SetBoolean(value);
 }

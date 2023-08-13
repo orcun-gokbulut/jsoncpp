@@ -8,16 +8,16 @@ bool JsonProperty::ParseInternal(JsonTokenizer& parser)
         token->Type != JsonTokenType::Identifier &&
         token->Type != JsonTokenType::NumericLiteral)
     {
-        fprintf(stderr, "Error: Unexpected token '%s' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-        return false;
+        throw JsonParsingFailedException(
+            std::string("Unexpected token. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
     }
     this->Name = token->Parameter;
 
     token = NEXT_TOKEN();
     if (token->Type != JsonTokenType::Assingment)
     {
-        fprintf(stderr, "Error: Found '%s' instead of assignment operator ':' at line %zu column %zu.\n", token->Parameter.c_str(), token->LineNumber, token->ColumnNumber);
-        return false;
+        throw JsonParsingFailedException(
+            std::string("Found irrelevant token instead of assignment operator ':'. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
     }
 
     if (!Value.ParseInternal(parser))

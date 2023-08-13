@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include "JsonExceptions.h"
+
 enum class JsonType
 {
     Undefined,
@@ -51,6 +53,7 @@ class JsonToStringOptions
         static JsonToStringOptions Default;
 };
 
+
 class Json
 {
     friend class JsonProperty;
@@ -69,32 +72,35 @@ class Json
         std::string ToStringInternal(size_t tabDepth, const JsonToStringOptions& options);
 
     public:
-        JsonType GetType() const;
+        JsonType GetType() const noexcept;
 
-        void SetUndefined();
-        bool IsUndefined() const;
+        void SetUndefined() noexcept;
+        bool IsUndefined() const noexcept;
 
-        void SetNull();
-        bool IsNull() const;
+        void SetNull() noexcept;
+        bool IsNull() const noexcept;
 
-        void SetString(const std::string& value);
+        void SetString(const std::string& value) noexcept;
         const std::string& GetString() const;
 
-        void SetNumeric(double value);
+        void SetNumeric(double value) noexcept;
         double GetNumeric() const;
 
-        void SetBoolean(bool value);
+        void SetBoolean(bool value) noexcept;
         bool GetBoolean() const;
 
-        JsonProperty& AddObjectProperty(const std::string& name);
-        const std::vector<JsonProperty>& GetObjectProperties() const;
-        void RemoveObjectProperty(const std::string& name);
+        JsonProperty& AddObjectProperty(const std::string& name) noexcept;
+        void AddObjectProperty(const std::string& name, const Json& value) noexcept;
+        void RemoveObjectProperty(const std::string& name);;
+        const std::vector<JsonProperty>& GetObjectProperties() const;;
 
-        void SetObjectProperty(const std::string& name, const Json& value);
+        void SetObjectProperty(const std::string& name, const Json& value) noexcept;
         Json& GetObjectProperty(const std::string& name);
         const Json& GetObjectProperty(const std::string& name) const;
 
-        void AppendArrayItem(const Json& Value);
+        Json& AppendArrayItem() noexcept;
+        void AppendArrayItem(const Json& Value) noexcept;
+        Json& InsertArrayItem(size_t index);
         void InsertArrayItem(size_t index, const Json& value);
         void RemoveArrayItem(size_t index);
         const std::vector<Json>& GetArrayItems() const;
@@ -103,15 +109,16 @@ class Json
         Json& GetArrayItem(size_t index);
         const Json& GetArrayItem(size_t index) const;
 
-        bool Parse(const std::string& jsonText);
-        std::string ToString(const JsonToStringOptions& options = JsonToStringOptions::Default);
+        void Parse(const std::string& jsonText);
+        std::string ToString(const JsonToStringOptions& options = JsonToStringOptions::Default) noexcept;
 
-        Json();
-        Json(JsonType type);
+        Json() noexcept;
+        Json(JsonType type) noexcept;
         Json(const Json& other) = default;
-        Json(const std::string& string);
-        Json(double numeric);
-        Json(bool boolean);
+        Json(const std::string& string) noexcept;
+        Json(const char* string) noexcept;
+        Json(double numeric) noexcept;
+        Json(bool boolean) noexcept;
 
         static Json Undefined;
         static Json Null;
