@@ -31,11 +31,7 @@
 Json Json::Undefined;
 Json Json::Null(JsonType::Null);
 
-JsonToStringOptions JsonToStringOptions::Default =
-    {
-        false,
-        "\t"
-    };
+JsonToStringOptions JsonToStringOptions::Default = {false, "\t"};
 
 void Json::SetType(JsonType type)
 {
@@ -72,8 +68,9 @@ bool Json::ParseInternal(JsonTokenizer& parser)
             }
             else
             {
-                throw JsonParsingFailedException(
-                    std::string("Unknown value identifier. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
+                throw JsonParsingFailedException(std::string("Unknown value identifier. Token: \'") + token->Parameter +
+                    "', Line: " + std::to_string(token->LineNumber) +
+                    ", Column: " + std::to_string(token->ColumnNumber));
             }
             break;
         }
@@ -118,7 +115,10 @@ bool Json::ParseInternal(JsonTokenizer& parser)
                 else
                 {
                     throw JsonParsingFailedException(
-                        std::string("Irrelevant token found instead of closing object block '}' or comma ','. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
+                        std::string(
+                            "Irrelevant token found instead of closing object block '}' or comma ','. Token: \'") +
+                        token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
                 }
             }
 
@@ -154,7 +154,10 @@ bool Json::ParseInternal(JsonTokenizer& parser)
                 else
                 {
                     throw JsonParsingFailedException(
-                        std::string("Irrelevant token found instead of closing array block ']' or comma ','. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
+                        std::string(
+                            "Irrelevant token found instead of closing array block ']' or comma ','. Token: \'") +
+                        token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
                 }
             }
             break;
@@ -308,7 +311,7 @@ bool Json::GetBoolean() const
     return ValueBoolean;
 }
 
-JsonProperty &Json::AddObjectProperty(const std::string& name) noexcept
+JsonProperty& Json::AddObjectProperty(const std::string& name) noexcept
 {
     SetType(JsonType::Object);
     for (auto iter = ValueProperties.begin(); iter != ValueProperties.end(); iter++)
@@ -319,7 +322,7 @@ JsonProperty &Json::AddObjectProperty(const std::string& name) noexcept
         return *iter;
     }
 
-    JsonProperty &newProperty = AddObjectProperty(name);
+    JsonProperty& newProperty = AddObjectProperty(name);
     newProperty.Name = name;
 
     return newProperty;
@@ -361,7 +364,7 @@ void Json::SetObjectProperty(const std::string& name, const Json& value) noexcep
     property.Value = value;
 }
 
-Json &Json::GetObjectProperty(const std::string& name)
+Json& Json::GetObjectProperty(const std::string& name)
 {
     if (GetType() != JsonType::Object)
         throw JsonTypeMismatchException();
@@ -396,7 +399,7 @@ Json& Json::AppendArrayItem() noexcept
     return *ValueArray.insert(ValueArray.end(), Json());
 }
 
-void Json::AppendArrayItem(const Json &value) noexcept
+void Json::AppendArrayItem(const Json& value) noexcept
 {
     SetType(JsonType::Array);
 

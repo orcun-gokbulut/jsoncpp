@@ -9,7 +9,6 @@ enum class JsonError
     ParsingFailed
 };
 
-
 class JsonException : public std::exception
 {
     public:
@@ -17,8 +16,6 @@ class JsonException : public std::exception
         virtual const std::string& ToString() const noexcept = 0;
 
         virtual const char* what() const noexcept override final;
-
-
 };
 
 class JsonTypeMismatchException : public JsonException
@@ -27,7 +24,6 @@ class JsonTypeMismatchException : public JsonException
         virtual JsonError GetError() const noexcept override;
         virtual const std::string& ToString() const noexcept override;
 };
-
 
 class JsonIndexOutOfRangeException : public JsonException
 {
@@ -40,6 +36,7 @@ class JsonParsingFailedException : public JsonException
 {
     private:
         std::string ErrorText;
+
     public:
         virtual JsonError GetError() const noexcept override;
         virtual const std::string& ToString() const noexcept override;

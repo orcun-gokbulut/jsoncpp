@@ -28,7 +28,10 @@
 #include <string>
 #include <vector>
 
-#define NEXT_TOKEN() parser.RequestToken(); if (token == nullptr) return false;
+#define NEXT_TOKEN() \
+    parser.RequestToken(); \
+    if (token == nullptr) \
+        return false;
 
 enum class JsonTokenType
 {

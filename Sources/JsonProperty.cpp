@@ -8,8 +8,8 @@ bool JsonProperty::ParseInternal(JsonTokenizer& parser)
         token->Type != JsonTokenType::Identifier &&
         token->Type != JsonTokenType::NumericLiteral)
     {
-        throw JsonParsingFailedException(
-            std::string("Unexpected token. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
+        throw JsonParsingFailedException(std::string("Unexpected token. Token: \'") + token->Parameter +
+            "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
     }
     this->Name = token->Parameter;
 
@@ -17,7 +17,8 @@ bool JsonProperty::ParseInternal(JsonTokenizer& parser)
     if (token->Type != JsonTokenType::Assingment)
     {
         throw JsonParsingFailedException(
-            std::string("Found irrelevant token instead of assignment operator ':'. Token: \'") + token->Parameter + "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
+            std::string("Found irrelevant token instead of assignment operator ':'. Token: \'") + token->Parameter +
+            "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
     }
 
     if (!Value.ParseInternal(parser))
@@ -44,10 +45,8 @@ std::string JsonProperty::ToStringInternal(size_t tabDepth, const JsonToStringOp
 
 JsonProperty::JsonProperty()
 {
-
 }
 
 JsonProperty::~JsonProperty()
 {
-
 }

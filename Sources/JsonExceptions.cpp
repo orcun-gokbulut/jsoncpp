@@ -41,4 +41,3 @@ JsonParsingFailedException::JsonParsingFailedException(std::string errorText)
 {
     ErrorText = errorText;
 }
-

@@ -25,10 +25,10 @@
 
 #pragma once
 
+#include "JsonExceptions.h"
+
 #include <string>
 #include <vector>
-
-#include "JsonExceptions.h"
 
 enum class JsonType
 {
@@ -53,11 +53,11 @@ class JsonToStringOptions
         static JsonToStringOptions Default;
 };
 
-
 class Json
 {
-    friend class JsonProperty;
-    friend class JsonTokenizer;
+        friend class JsonProperty;
+        friend class JsonTokenizer;
+
     private:
         JsonType Type;
         std::string ValueString;
@@ -91,8 +91,10 @@ class Json
 
         JsonProperty& AddObjectProperty(const std::string& name) noexcept;
         void AddObjectProperty(const std::string& name, const Json& value) noexcept;
-        void RemoveObjectProperty(const std::string& name);;
-        const std::vector<JsonProperty>& GetObjectProperties() const;;
+        void RemoveObjectProperty(const std::string& name);
+        ;
+        const std::vector<JsonProperty>& GetObjectProperties() const;
+        ;
 
         void SetObjectProperty(const std::string& name, const Json& value) noexcept;
         Json& GetObjectProperty(const std::string& name);
@@ -115,19 +117,19 @@ class Json
         Json() noexcept;
         Json(JsonType type) noexcept;
         Json(const Json& other) = default;
-        Json(const std::string& string) noexcept;
-        Json(const char* string) noexcept;
-        Json(double numeric) noexcept;
-        Json(bool boolean) noexcept;
+        Json(const std::string& value) noexcept;
+        Json(const char* value) noexcept;
+        Json(double value) noexcept;
+        Json(bool value) noexcept;
 
         static Json Undefined;
         static Json Null;
 };
 
-
 class JsonProperty
 {
-    friend class Json;
+        friend class Json;
+
     private:
         bool ParseInternal(JsonTokenizer& parser);
         std::string ToStringInternal(size_t depth, const JsonToStringOptions& options);

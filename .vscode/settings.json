@@ -65,6 +65,8 @@
         "thread": "cpp",
         "variant": "cpp",
         "semaphore": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "unordered_set": "cpp",
+        "cinttypes": "cpp"
     }
 }

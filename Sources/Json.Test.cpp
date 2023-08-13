@@ -6,29 +6,29 @@ TEST_CASE("Json")
 {
     SECTION("Json::SetString")
     {
-        Json A;
-        A.SetString("TestString");
-        REQUIRE(A.GetType() == JsonType::String);
-        REQUIRE(A.GetString() == "TestString");
+        Json a;
+        a.SetString("TestString");
+        REQUIRE(a.GetType() == JsonType::String);
+        REQUIRE(a.GetString() == "TestString");
     }
 
     SECTION("Json::GetString")
     {
-        Json A;
-        A.SetString("TestString");
-        REQUIRE_NOTHROW(A.GetString() == "TestString");
+        Json a;
+        a.SetString("TestString");
+        REQUIRE_NOTHROW(a.GetString() == "TestString");
 
-        A.SetNull();
-        REQUIRE_THROWS_AS(A.GetString(), JsonTypeMismatchException);
+        a.SetNull();
+        REQUIRE_THROWS_AS(a.GetString(), JsonTypeMismatchException);
 
-        Json B;
-        REQUIRE_THROWS_AS(A.GetString(), JsonTypeMismatchException);
+        Json b;
+        REQUIRE_THROWS_AS(a.GetString(), JsonTypeMismatchException);
     }
 
     SECTION("Json::Json(std::string)")
     {
-        Json A("TestString");
-        REQUIRE(A.GetType() == JsonType::String);
-        REQUIRE(A.GetString() == "TestString");
+        Json a("TestString");
+        REQUIRE(a.GetType() == JsonType::String);
+        REQUIRE(a.GetString() == "TestString");
     }
 }

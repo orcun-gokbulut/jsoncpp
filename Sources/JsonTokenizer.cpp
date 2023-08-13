@@ -77,7 +77,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
         }
         else
         {
-            switch(current)
+            switch (current)
             {
                 case '\\':
                 case '\'':
@@ -115,7 +115,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::Comma;
-                    token.Parameter =  ",";
+                    token.Parameter = ",";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -144,7 +144,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::Assingment;
-                    token.Parameter =  ":";
+                    token.Parameter = ":";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -159,7 +159,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ObjectOpen;
-                    token.Parameter =  "{";
+                    token.Parameter = "{";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -174,7 +174,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ObjectClose;
-                    token.Parameter =  "}";
+                    token.Parameter = "}";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -189,7 +189,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ArrayOpen;
-                    token.Parameter =  "[";
+                    token.Parameter = "[";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -204,7 +204,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ArrayClose;
-                    token.Parameter =  "]";
+                    token.Parameter = "]";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -214,34 +214,39 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                 {
                     if (token.Type == JsonTokenType::Unknown)
                     {
-                        if (isdigit(current) || current == '-')
+                        if (isdigit(current) != 0 || current == '-')
                         {
                             token.Type = JsonTokenType::NumericLiteral;
                         }
-                        else if (isalpha(current) || current == '_')
+                        else if (isalpha(current) != 0 || current == '_')
                         {
                             token.Type = JsonTokenType::Identifier;
                         }
                         else
                         {
-                            throw JsonParsingFailedException(
-                                std::string("Unexpected value character. Character: \'") + current + "', Line: " + std::to_string(token.LineNumber) + ", Column: " + std::to_string(token.ColumnNumber));
+                            throw JsonParsingFailedException(std::string("Unexpected value character. Character: \'") +
+                                current + "', Line: " + std::to_string(token.LineNumber) +
+                                ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
                     else if (token.Type == JsonTokenType::NumericLiteral)
                     {
-                        if ((!isdigit(current) && current != '.') || (current == '.' && token.Parameter.find('.') != std::string::npos))
+                        if ((isdigit(current) == 0 && current != '.') ||
+                            (current == '.' && token.Parameter.find('.') != std::string::npos))
                         {
                             throw JsonParsingFailedException(
-                                std::string("Unexpected numeric literal character. Character: \'") + current + "', Line: " + std::to_string(token.LineNumber) + ", Column: " + std::to_string(token.ColumnNumber));
+                                std::string("Unexpected numeric literal character. Character: \'") + current +
+                                "', Line: " + std::to_string(token.LineNumber) +
+                                ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
                     else if (token.Type == JsonTokenType::Identifier)
                     {
-                        if (!isalnum(current) && current != '_')
+                        if (isalnum(current) == 0 && current != '_')
                         {
                             throw JsonParsingFailedException(
-                                std::string("Unexpected identifier character. Character: \'") + current + "', Line: " + std::to_string(token.LineNumber) + ", Column: " + std::to_string(token.ColumnNumber));
+                                std::string("Unexpected identifier character. Character: \'") + current + "', Line: " +
+                                std::to_string(token.LineNumber) + ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
 
