@@ -33,12 +33,12 @@
 enum class JsonType
 {
     Undefined,
-    Object,
-    Array,
+    Null,
     String,
     Numeric,
     Boolean,
-    Null
+    Object,
+    Array
 };
 
 class JsonProperty;
@@ -90,18 +90,16 @@ class Json
         bool GetBoolean() const;
 
         JsonProperty& AddObjectProperty(const std::string& name) noexcept;
-        void AddObjectProperty(const std::string& name, const Json& value) noexcept;
+        JsonProperty& AddObjectProperty(const std::string& name, const Json& value) noexcept;
         void RemoveObjectProperty(const std::string& name);
-        ;
         const std::vector<JsonProperty>& GetObjectProperties() const;
-        ;
 
         void SetObjectProperty(const std::string& name, const Json& value) noexcept;
         Json& GetObjectProperty(const std::string& name);
         const Json& GetObjectProperty(const std::string& name) const;
 
-        Json& AppendArrayItem() noexcept;
-        void AppendArrayItem(const Json& Value) noexcept;
+        Json& AddArrayItem() noexcept;
+        Json& AddArrayItem(const Json& Value) noexcept;
         Json& InsertArrayItem(size_t index);
         void InsertArrayItem(size_t index, const Json& value);
         void RemoveArrayItem(size_t index);

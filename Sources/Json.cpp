@@ -89,7 +89,7 @@ bool Json::ParseInternal(JsonTokenizer& parser)
 
         case JsonTokenType::ObjectOpen:
         {
-            this->Type = JsonType::Object;
+            SetType(JsonType::Object);
 
             token = NEXT_TOKEN();
             if (token->Type == JsonTokenType::ObjectClose)
@@ -127,7 +127,7 @@ bool Json::ParseInternal(JsonTokenizer& parser)
 
         case JsonTokenType::ArrayOpen:
         {
-            this->Type = JsonType::Array;
+            SetType(JsonType::Array);
 
             token = NEXT_TOKEN();
             if (token->Type == JsonTokenType::ArrayClose)
@@ -322,16 +322,16 @@ JsonProperty& Json::AddObjectProperty(const std::string& name) noexcept
         return *iter;
     }
 
-    JsonProperty& newProperty = AddObjectProperty(name);
+    JsonProperty newProperty;
     newProperty.Name = name;
-
-    return newProperty;
+    return *ValueProperties.insert(ValueProperties.end(), newProperty);
 }
 
-void Json::AddObjectProperty(const std::string& name, const Json& value) noexcept
+JsonProperty& Json::AddObjectProperty(const std::string& name, const Json& value) noexcept
 {
-    JsonProperty& newProprty = AddObjectProperty(name);
-    newProprty.Value = value;
+    JsonProperty& newProperty = AddObjectProperty(name);
+    newProperty.Value = value;
+    return newProperty;
 }
 
 const std::vector<JsonProperty>& Json::GetObjectProperties() const
@@ -355,6 +355,8 @@ void Json::RemoveObjectProperty(const std::string& name)
         ValueProperties.erase(iter);
         return;
     }
+
+    throw JsonIndexOutOfRangeException();
 }
 
 void Json::SetObjectProperty(const std::string& name, const Json& value) noexcept
@@ -375,7 +377,7 @@ Json& Json::GetObjectProperty(const std::string& name)
             return iter->Value;
     }
 
-    return Json::Undefined;
+    throw JsonIndexOutOfRangeException();
 }
 
 const Json& Json::GetObjectProperty(const std::string& name) const
@@ -392,25 +394,25 @@ const Json& Json::GetObjectProperty(const std::string& name) const
     return Json::Undefined;
 }
 
-Json& Json::AppendArrayItem() noexcept
+Json& Json::AddArrayItem() noexcept
 {
     SetType(JsonType::Array);
 
     return *ValueArray.insert(ValueArray.end(), Json());
 }
 
-void Json::AppendArrayItem(const Json& value) noexcept
+Json& Json::AddArrayItem(const Json& value) noexcept
 {
     SetType(JsonType::Array);
 
-    ValueArray.insert(ValueArray.end(), value);
+    return *ValueArray.insert(ValueArray.end(), value);
 }
 
 Json& Json::InsertArrayItem(size_t index)
 {
     SetType(JsonType::Array);
 
-    if (index >= ValueProperties.size())
+    if (index >= ValueArray.size())
         throw JsonIndexOutOfRangeException();
 
     return *ValueArray.insert(ValueArray.begin() + index, Json());
@@ -420,10 +422,9 @@ void Json::InsertArrayItem(size_t index, const Json& value)
 {
     SetType(JsonType::Array);
 
-    if (index >= ValueProperties.size())
+    if (index > ValueArray.size())
         throw JsonIndexOutOfRangeException();
 
-    this->Type = JsonType::Array;
     ValueArray.insert(ValueArray.begin() + index, value);
 }
 
@@ -451,7 +452,7 @@ void Json::SetArrayItem(size_t index, const Json& value)
     if (GetType() != JsonType::Array)
         throw JsonTypeMismatchException();
 
-    if (index >= ValueProperties.size())
+    if (index >= ValueArray.size())
         throw JsonIndexOutOfRangeException();
 
     ValueArray[index] = value;
@@ -462,7 +463,7 @@ Json& Json::GetArrayItem(size_t index)
     if (GetType() != JsonType::Array)
         throw JsonTypeMismatchException();
 
-    if (index >= ValueProperties.size())
+    if (index >= ValueArray.size())
         throw JsonIndexOutOfRangeException();
 
     return ValueArray[index];
@@ -473,7 +474,7 @@ const Json& Json::GetArrayItem(size_t index) const
     if (GetType() != JsonType::Array)
         throw JsonTypeMismatchException();
 
-    if (index >= ValueProperties.size())
+    if (index >= ValueArray.size())
         return Json::Undefined;
 
     return ValueArray[index];
