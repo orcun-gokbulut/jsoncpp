@@ -20,7 +20,7 @@
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
+  Github: https://www.github.com/orcun-gokbulut
 *******************************************************************************/
 
 #pragma once
@@ -89,6 +89,7 @@ class Json
         void SetBoolean(bool value) noexcept;
         bool GetBoolean() const;
 
+        void SetEmptyObject();
         JsonProperty& AddObjectProperty(const std::string& name) noexcept;
         JsonProperty& AddObjectProperty(const std::string& name, const Json& value) noexcept;
         void RemoveObjectProperty(const std::string& name);
@@ -98,10 +99,11 @@ class Json
         Json& GetObjectProperty(const std::string& name);
         const Json& GetObjectProperty(const std::string& name) const;
 
+        void SetEmptyArray();
         Json& AddArrayItem() noexcept;
         Json& AddArrayItem(const Json& Value) noexcept;
         Json& InsertArrayItem(size_t index);
-        void InsertArrayItem(size_t index, const Json& value);
+        Json& InsertArrayItem(size_t index, const Json& value);
         void RemoveArrayItem(size_t index);
         const std::vector<Json>& GetArrayItems() const;
 

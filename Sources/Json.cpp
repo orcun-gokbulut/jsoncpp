@@ -1,6 +1,6 @@
 
 /*******************************************************************************
- JsonCpp - Json.h
+ JsonCpp - Json.cpp
  ------------------------------------------------------------------------------
  Copyright (c) 2022, Yiğit Orçun GÖKBULUT. All rights Reserved.
 
@@ -21,7 +21,7 @@
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
+  Github: https://www.github.com/orcun-gokbulut
 *******************************************************************************/
 
 #include "Json.h"
@@ -311,6 +311,12 @@ bool Json::GetBoolean() const
     return ValueBoolean;
 }
 
+void Json::SetEmptyObject()
+{
+    SetType(JsonType::Object);
+    ValueProperties.clear();
+}
+
 JsonProperty& Json::AddObjectProperty(const std::string& name) noexcept
 {
     SetType(JsonType::Object);
@@ -394,6 +400,12 @@ const Json& Json::GetObjectProperty(const std::string& name) const
     return Json::Undefined;
 }
 
+void Json::SetEmptyArray()
+{
+    SetType(JsonType::Array);
+    ValueArray.clear();
+}
+
 Json& Json::AddArrayItem() noexcept
 {
     SetType(JsonType::Array);
@@ -410,15 +422,10 @@ Json& Json::AddArrayItem(const Json& value) noexcept
 
 Json& Json::InsertArrayItem(size_t index)
 {
-    SetType(JsonType::Array);
-
-    if (index >= ValueArray.size())
-        throw JsonIndexOutOfRangeException();
-
-    return *ValueArray.insert(ValueArray.begin() + index, Json());
+    return InsertArrayItem(0, Json());
 }
 
-void Json::InsertArrayItem(size_t index, const Json& value)
+Json& Json::InsertArrayItem(size_t index, const Json& value)
 {
     SetType(JsonType::Array);
 

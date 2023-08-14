@@ -20,7 +20,7 @@
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
+  Github: https://www.github.com/orcun-gokbulut
 *******************************************************************************/
 
 #pragma once

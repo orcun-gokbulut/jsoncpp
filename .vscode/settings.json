@@ -67,6 +67,11 @@
         "semaphore": "cpp",
         "list": "cpp",
         "unordered_set": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "*.ipp": "cpp",
+        "valarray": "cpp",
+        "strstream": "cpp",
+        "complex": "cpp",
+        "cfenv": "cpp"
     }
 }

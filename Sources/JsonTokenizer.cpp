@@ -1,6 +1,5 @@
-
 /*******************************************************************************
- JsonCpp - Json.h
+ JsonCpp - JsonTokenizer.cpp
  ------------------------------------------------------------------------------
  Copyright (c) 2022, Yiğit Orçun GÖKBULUT. All rights Reserved.
 
@@ -21,7 +20,7 @@
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
+  Github: https://www.github.com/orcun-gokbulut
 *******************************************************************************/
 
 #include "JsonTokenizer.h"
