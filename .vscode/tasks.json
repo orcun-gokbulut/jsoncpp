@@ -7,7 +7,7 @@
             "command": "mkdir",
             "args": [
                 "-p",
-                "${workspaceFolder}/build"
+                "${workspaceFolder}/Build"
             ],
             "presentation": {
                 "echo": true,
@@ -25,12 +25,14 @@
             "command": "cmake",
             "args": [
                 "-DCMAKE_BUILD_TYPE=Debug",
-                "-DBUILD_EXAMPLE=true",
-                "-DCMAKE_INSTALL_PREFIX=./output",
+                "-DCMAKE_INSTALL_PREFIX=./Output",
+                "-DJSONCPP_BUILD_TESTS=Yes",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
                 "${workspaceFolder}"
             ],
+
             "options": {
-                "cwd": "${workspaceFolder}/build"
+                "cwd": "${workspaceFolder}/Build",
             },
             "presentation": {
                 "echo": true,
@@ -51,11 +53,12 @@
             "command": "cmake",
             "args": [
                 "-DCMAKE_BUILD_TYPE=Release",
-                "-DCMAKE_INSTALL_PREFIX=./output",
+                "-DCMAKE_INSTALL_PREFIX=./Output",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
                 "${workspaceFolder}"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/build"
+                "cwd": "${workspaceFolder}/Build"
             },
             "presentation": {
                 "echo": false,
@@ -73,7 +76,7 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build"
+                "${workspaceFolder}/Build"
             ],
             "group": {
                 "kind": "build",
@@ -90,17 +93,32 @@
             ]
         },
         {
+            "label": "Test",
+            "type": "shell",
+            "command": "ctest",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/Build"
+            },
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "showReuseMessage": false
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Clean",
             "type": "shell",
             "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "${workspaceFolder}/Build",
                 "--target",
                 "clean"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/build"
+                "cwd": "${workspaceFolder}/Build"
             },
             "presentation": {
                 "echo": false,
@@ -115,10 +133,10 @@
             "command": "cmake",
             "args": [
                 "--install",
-                "${workspaceFolder}/build"
+                "${workspaceFolder}/Build"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/build"
+                "cwd": "${workspaceFolder}/Build"
             },
             "presentation": {
                 "echo": false,

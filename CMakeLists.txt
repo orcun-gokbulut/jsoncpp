@@ -23,8 +23,14 @@
   Github: https://www.github.com/orcun-gokbulut/ZE
 *****************************************************************************]]
 
-cmake_minimum_required(VERSION 3.10)
-
+cmake_minimum_required(VERSION 3.21)
 project(JsonCpp VERSION 0.0.1 LANGUAGES CXX)
 
-add_subdirectory(src)
+add_subdirectory(Externals)
+
+if(PROJECT_IS_TOP_LEVEL AND JSONCPP_CATCH2_AVAILABLE)
+    set(JSONCPP_BUILD_TESTS FALSE CACHE BOOL "Enable unit tests")
+endif()
+
+enable_testing()
+add_subdirectory(Sources)

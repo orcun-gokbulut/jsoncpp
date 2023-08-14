@@ -1,6 +1,5 @@
-
 /*******************************************************************************
- JsonCpp - Json.h
+ JsonCpp - JsonTokenizer.cpp
  ------------------------------------------------------------------------------
  Copyright (c) 2022, Yiğit Orçun GÖKBULUT. All rights Reserved.
 
@@ -21,10 +20,12 @@
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
+  Github: https://www.github.com/orcun-gokbulut
 *******************************************************************************/
 
 #include "JsonTokenizer.h"
+
+#include "JsonExceptions.h"
 
 #include <string.h>
 
@@ -75,7 +76,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
         }
         else
         {
-            switch(current)
+            switch (current)
             {
                 case '\\':
                 case '\'':
@@ -113,7 +114,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::Comma;
-                    token.Parameter =  ",";
+                    token.Parameter = ",";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -142,7 +143,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::Assingment;
-                    token.Parameter =  ":";
+                    token.Parameter = ":";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -157,7 +158,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ObjectOpen;
-                    token.Parameter =  "{";
+                    token.Parameter = "{";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -172,7 +173,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ObjectClose;
-                    token.Parameter =  "}";
+                    token.Parameter = "}";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -187,7 +188,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ArrayOpen;
-                    token.Parameter =  "[";
+                    token.Parameter = "[";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -202,7 +203,7 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                     }
 
                     token.Type = JsonTokenType::ArrayClose;
-                    token.Parameter =  "]";
+                    token.Parameter = "]";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -212,34 +213,39 @@ bool JsonTokenizer::Tokenize(const char* jsonText)
                 {
                     if (token.Type == JsonTokenType::Unknown)
                     {
-                        if (isdigit(current) || current == '-')
+                        if (isdigit(current) != 0 || current == '-')
                         {
                             token.Type = JsonTokenType::NumericLiteral;
                         }
-                        else if (isalpha(current) || current == '_')
+                        else if (isalpha(current) != 0 || current == '_')
                         {
                             token.Type = JsonTokenType::Identifier;
                         }
                         else
                         {
-                            fprintf(stderr, "Error: Unexpected value character '%c' at line %zu column %zu.\n", current, token.LineNumber, token.ColumnNumber);
-                            return false;
+                            throw JsonParsingFailedException(std::string("Unexpected value character. Character: \'") +
+                                current + "', Line: " + std::to_string(token.LineNumber) +
+                                ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
                     else if (token.Type == JsonTokenType::NumericLiteral)
                     {
-                        if ((!isdigit(current) && current != '.') || (current == '.' && token.Parameter.find('.') != std::string::npos))
+                        if ((isdigit(current) == 0 && current != '.') ||
+                            (current == '.' && token.Parameter.find('.') != std::string::npos))
                         {
-                            fprintf(stderr, "Error: Unexpected numeric literal character '%c' at line %zu column %zu.\n", current, token.LineNumber, token.ColumnNumber);
-                            return false;
+                            throw JsonParsingFailedException(
+                                std::string("Unexpected numeric literal character. Character: \'") + current +
+                                "', Line: " + std::to_string(token.LineNumber) +
+                                ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
                     else if (token.Type == JsonTokenType::Identifier)
                     {
-                        if (!isalnum(current) && current != '_')
+                        if (isalnum(current) == 0 && current != '_')
                         {
-                            fprintf(stderr, "Error: Unexpected identifier character '%c' at line %zu column %zu.\n", current, token.LineNumber, token.ColumnNumber);
-                            return false;
+                            throw JsonParsingFailedException(
+                                std::string("Unexpected identifier character. Character: \'") + current + "', Line: " +
+                                std::to_string(token.LineNumber) + ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
 
@@ -259,8 +265,7 @@ const JsonToken* JsonTokenizer::RequestToken()
 {
     if (Current == Tokens.end().base())
     {
-        fprintf(stderr, "Error: End of file reached unexpectedly.\n");
-        return nullptr;
+        throw JsonParsingFailedException("End of input reached unexpectedly.");
     }
 
     JsonToken* temp = Current;

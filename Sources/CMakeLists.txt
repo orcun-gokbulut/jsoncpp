@@ -25,31 +25,32 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-set(sources
-    Json.cpp
-    JsonTokenizer.cpp
-)
-
-set(headers
-    Json.h
-)
-
-add_library(jsoncpp SHARED)
-target_sources(jsoncpp PRIVATE ${sources} ${headers})
-set_target_properties(jsoncpp PROPERTIES PUBLIC_HEADER ${headers})
-target_include_directories(
-    jsoncpp
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
-install(TARGETS jsoncpp)
+list(APPEND Sources Json.cpp)
+list(APPEND PublicHeaders Json.h)
+list(APPEND Sources JsonProperty.cpp)
+list(APPEND Sources JsonTokenizer.cpp)
+list(APPEND Headers JsonTokenizer.h)
+list(APPEND Sources JsonExceptions.cpp)
+list(APPEND PublicHeaders JsonExceptions.h)
 
 
-set(BUILD_EXAMPLE false CACHE BOOL "Build test program.")
-if (${BUILD_EXAMPLE})
-    add_executable(jsoncpp.test Json.test.cpp)
-    target_link_libraries(jsoncpp.test jsoncpp)
+if(NOT PROJECT_IS_TOP_LEVEL)
+    add_library(jsoncpp)
+else()
+    add_library(jsoncpp SHARED)
+endif()
+
+target_sources(jsoncpp PRIVATE ${Sources} ${Headers} ${PublicHeaders})
+set_target_properties(jsoncpp PROPERTIES PUBLIC_HEADER "${PublicHeaders}")
+target_include_directories(jsoncpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+if(PROJECT_IS_TOP_LEVEL)
+    install(TARGETS jsoncpp)
+endif()
+
+
+if(JSONCPP_BUILD_TESTS AND JSONCPP_CATCH2_AVAILABLE)
+    add_executable(jsoncpp.test Json.Test.cpp)
+    target_link_libraries(jsoncpp.test jsoncpp Catch2 Catch2WithMain)
+    add_test(NAME Json COMMAND $<TARGET_FILE:jsoncpp.test>)
 endif()

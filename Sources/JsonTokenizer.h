@@ -20,7 +20,7 @@
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
+  Github: https://www.github.com/orcun-gokbulut
 *******************************************************************************/
 
 #pragma once
@@ -28,7 +28,10 @@
 #include <string>
 #include <vector>
 
-#define NEXT_TOKEN() parser.RequestToken(); if (token == nullptr) return false;
+#define NEXT_TOKEN() \
+    parser.RequestToken(); \
+    if (token == nullptr) \
+        return false;
 
 enum class JsonTokenType
 {
