@@ -1,27 +1,17 @@
-#[[*****************************************************************************
+#[[**************************************************************
  JsonCpp - CMakeLists.txt
- ------------------------------------------------------------------------------
+ ----------------------------------------------------------------
  Copyright (c) 2022, Yiğit Orçun GÖKBULUT. All rights Reserved.
 
- This library is free software; you can  redistribute it and/or modify it under
- the terms of the GNU  Lesser General  Public License as  published by the Free
- Software Foundation;  either version 2.1  of the License, or  (at your option)
- any later version.
-
- This library is  distributed in the hope  that it will be  useful, but WITHOUT
- ANY WARRANTY; without even the implied  warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU Lesser General  Public License for more
- details.
-
- You should have received a copy of the GNU Lesser General Public License along
- with this library;  if not, write  to the Free  Software Foundation,  Inc., 51
- Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ Use of this source code is governed by a BSD-style
+ license that can be found in the LICENSE file or at
+ https://developers.google.com/open-source/licenses/bsd
 
  Copyright Owner Information:
   Name: Yiğit Orçun GÖKBULUT
   Contact: orcun.gokbulut@gmail.com
-  Github: https://www.github.com/orcun-gokbulut/ZE
-*****************************************************************************]]
+  Github: https://www.github.com/orcun-gokbulut
+****************************************************************]]
 
 cmake_minimum_required(VERSION 3.10)
 
@@ -34,7 +24,7 @@ list(APPEND Sources JsonExceptions.cpp)
 list(APPEND PublicHeaders JsonExceptions.h)
 
 
-if(NOT PROJECT_IS_TOP_LEVEL)
+if(NOT PROJECT_IS_TOP_LEVEL OR JSONCPP_BUILD_STATIC)
     add_library(jsoncpp)
 else()
     add_library(jsoncpp SHARED)
@@ -47,7 +37,6 @@ target_include_directories(jsoncpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 if(PROJECT_IS_TOP_LEVEL)
     install(TARGETS jsoncpp)
 endif()
-
 
 if(JSONCPP_BUILD_TESTS AND JSONCPP_CATCH2_AVAILABLE)
     add_executable(jsoncpp.test Json.Test.cpp)
