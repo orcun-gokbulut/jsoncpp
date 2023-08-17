@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Test",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/Build/Sources/jsoncpp.test",
-            "args": [],
+            "args": [ "-s" ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/Build",
             "environment": [],

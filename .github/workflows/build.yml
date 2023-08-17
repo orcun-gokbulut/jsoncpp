@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Clone Catch2 External
+      run: git clone --branch v3.4.0 --depth 1 https://github.com/catchorg/Catch2.git ${{github.workspace}}/Externals/Catch2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DJSONCPP_BUILD_TESTS=yes
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build --config ${{env.BUILD_TYPE}}
+
+    - name: Tests
+      run: ctest --output-on-failure --test-dir ${{github.workspace}}/Build

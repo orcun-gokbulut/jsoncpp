@@ -25,8 +25,36 @@
             "command": "cmake",
             "args": [
                 "-DCMAKE_BUILD_TYPE=Debug",
-                "-DCMAKE_INSTALL_PREFIX=./Output",
-                "-DJSONCPP_BUILD_TESTS=Yes",
+                "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/Output",
+                "-DJSONCPP_BUILD_TESTS=yes",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
+                "${workspaceFolder}"
+            ],
+
+            "options": {
+                "cwd": "${workspaceFolder}/Build",
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "dependsOn":[
+                "Create Build Directory"
+            ]
+        },
+        {
+            "label": "Configure - Release with Symbols",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+                "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/Output",
+                "-DJSONCPP_BUILD_TESTS=yes",
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
                 "${workspaceFolder}"
             ],
@@ -53,7 +81,7 @@
             "command": "cmake",
             "args": [
                 "-DCMAKE_BUILD_TYPE=Release",
-                "-DCMAKE_INSTALL_PREFIX=./Output",
+                "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/Output",
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
                 "${workspaceFolder}"
             ],
