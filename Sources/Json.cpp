@@ -421,7 +421,7 @@ Json& Json::InsertArrayItem(size_t index, const Json& value)
     if (index > ValueArray.size())
         throw JsonIndexOutOfRangeException();
 
-    ValueArray.insert(ValueArray.begin() + index, value);
+    return *ValueArray.insert(ValueArray.begin() + index, value);
 }
 
 void Json::RemoveArrayItem(size_t index)

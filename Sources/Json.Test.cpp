@@ -306,7 +306,8 @@ TEST_CASE("Json::GetArrayItem")
 TEST_CASE("Json::InsertArrayItem")
 {
     Json a;
-    a.InsertArrayItem(0);
+    Json& newItem = a.InsertArrayItem(0);
+    REQUIRE(newItem.IsUndefined());
     REQUIRE(a.GetType() == JsonType::Array);
     REQUIRE(a.GetArrayItems().size() == 1);
     REQUIRE(a.GetArrayItem(0).IsUndefined());
