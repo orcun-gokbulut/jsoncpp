@@ -18,45 +18,42 @@
 #include <string>
 #include <vector>
 
-enum class JsonTokenType
+enum class JsonQueryTokenType
 {
     Unknown,
-    ObjectOpen,
-    ObjectClose,
+    PropertyAccess,
     ArrayOpen,
     ArrayClose,
     Identifier,
     StringLiteral,
     NumericLiteral,
-    Assingment,
-    Comma
 };
 
-class JsonToken
+class JsonQueryToken
 {
     public:
-        JsonTokenType Type;
+        JsonQueryTokenType Type;
         std::string Parameter;
         size_t LineNumber;
         size_t ColumnNumber;
 
         void Reset();
 
-        JsonToken();
+        JsonQueryToken();
 };
 
-class JsonTokenizer
+class JsonQueryTokenizer
 {
     private:
-        std::vector<JsonToken> Tokens;
-        JsonToken* Current;
+        std::vector<JsonQueryToken> Tokens;
+        JsonQueryToken* Current;
 
 
     public:
         void Tokenize(const char* jsonText);
 
-        const JsonToken* RequestToken();
+        const JsonQueryToken* RequestToken();
         void DeferToken();
 
-        JsonTokenizer();
+        JsonQueryTokenizer();
 };

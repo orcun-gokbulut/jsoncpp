@@ -16,9 +16,16 @@
 #include "Json.h"
 #include "JsonTokenizer.h"
 
-bool JsonProperty::ParseInternal(JsonTokenizer& parser)
+void JsonProperty::ParseInternal(JsonTokenizer& tokenizer)
 {
-    const JsonToken* token = NEXT_TOKEN();
+    const JsonToken* token = tokenizer.RequestToken();
+    if (token == nullptr)
+    {
+        throw JsonParsingFailedException(std::string(
+            "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+            ", Column: " + std::to_string(token->ColumnNumber));
+    }
+
     if (token->Type != JsonTokenType::StringLiteral &&
         token->Type != JsonTokenType::Identifier &&
         token->Type != JsonTokenType::NumericLiteral)
@@ -28,7 +35,14 @@ bool JsonProperty::ParseInternal(JsonTokenizer& parser)
     }
     this->Name = token->Parameter;
 
-    token = NEXT_TOKEN();
+    token = tokenizer.RequestToken();
+    if (token == nullptr)
+    {
+        throw JsonParsingFailedException(std::string(
+            "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+            ", Column: " + std::to_string(token->ColumnNumber));
+    }
+
     if (token->Type != JsonTokenType::Assingment)
     {
         throw JsonParsingFailedException(
@@ -36,10 +50,7 @@ bool JsonProperty::ParseInternal(JsonTokenizer& parser)
             "', Line: " + std::to_string(token->LineNumber) + ", Column: " + std::to_string(token->ColumnNumber));
     }
 
-    if (!Value.ParseInternal(parser))
-        return false;
-
-    return true;
+    Value.ParseInternal(tokenizer);
 }
 
 std::string JsonProperty::ToStringInternal(size_t tabDepth, const JsonToStringOptions& options)

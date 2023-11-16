@@ -33,6 +33,7 @@ enum class JsonType
 
 class JsonProperty;
 class JsonTokenizer;
+class JsonQueryTokenizer;
 
 class JsonToStringOptions
 {
@@ -58,7 +59,9 @@ class Json
 
         void SetType(JsonType Type);
 
-        bool ParseInternal(JsonTokenizer& parser);
+        const Json& QueryInternal(JsonQueryTokenizer& tokenizer) const;
+
+        void ParseInternal(JsonTokenizer& tokenizer);
         std::string ToStringInternal(size_t tabDepth, const JsonToStringOptions& options);
 
     public:
@@ -104,6 +107,13 @@ class Json
         void Parse(const std::string& jsonText);
         std::string ToString(const JsonToStringOptions& options = JsonToStringOptions::Default) noexcept;
 
+        Json& Query(const std::string& query);
+        const Json& Query(const std::string& query) const;
+
+        const std::string& QueryString(const std::string& query, const std::string& defaultValue = "") const;
+        double QueryNumeric(const std::string& query, double defaultValue = 0.0) const;
+        bool QueryBoolean(const std::string& query, bool defaultValue = false) const;
+
         Json() noexcept;
         Json(JsonType type) noexcept;
         Json(const Json& other) = default;
@@ -121,7 +131,7 @@ class JsonProperty
         friend class Json;
 
     private:
-        bool ParseInternal(JsonTokenizer& parser);
+        void ParseInternal(JsonTokenizer& parser);
         std::string ToStringInternal(size_t depth, const JsonToStringOptions& options);
 
     public:

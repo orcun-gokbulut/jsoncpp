@@ -72,6 +72,8 @@
         "valarray": "cpp",
         "strstream": "cpp",
         "complex": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "csignal": "cpp",
+        "typeindex": "cpp"
     }
 }

@@ -16,6 +16,7 @@
 #include "Json.h"
 
 #include "JsonTokenizer.h"
+#include "JsonQueryTokenizer.h"
 
 Json Json::Undefined;
 Json Json::Null(JsonType::Null);
@@ -36,9 +37,154 @@ void Json::SetType(JsonType type)
     ValueArray.clear();
 }
 
-bool Json::ParseInternal(JsonTokenizer& parser)
+const Json& Json::QueryInternal(JsonQueryTokenizer& tokenizer) const
 {
-    const JsonToken* token = NEXT_TOKEN();
+    const JsonQueryToken* token = tokenizer.RequestToken();
+    if (token == nullptr)
+        return *this;
+
+    switch (token->Type)
+    {
+        case JsonQueryTokenType::Identifier:
+            if (this->GetType() != JsonType::Object)
+                return Json::Undefined;
+
+            for (auto current = this->ValueProperties.begin(); current != this->ValueProperties.end(); current++)
+            {
+                if (current->Name != token->Parameter)
+                    continue;
+
+                token = tokenizer.RequestToken();
+                if (token == nullptr)
+                {
+                    return current->Value;
+                }
+                else if (token->Type == JsonQueryTokenType::PropertyAccess)
+                {
+                    current->Value.QueryInternal(tokenizer);
+                }
+                else
+                {
+                    throw JsonParsingFailedException(std::string(
+                        "Irrelevant token found. Token: \'") +
+                        token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
+                }
+            }
+
+            return Json::Undefined;
+            break;
+
+        case JsonQueryTokenType::ArrayOpen:
+            token = tokenizer.RequestToken();
+            if (token == nullptr)
+            {
+                throw JsonParsingFailedException(std::string(
+                    "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                    ", Column: " + std::to_string(token->ColumnNumber));
+            }
+
+            if (token->Type == JsonQueryTokenType::StringLiteral)
+            {
+                if (this->GetType() != JsonType::Object)
+                    return Json::Undefined;
+
+                for (auto current = this->ValueProperties.begin(); current != this->ValueProperties.end(); current++)
+                {
+                    if (current->Name != token->Parameter)
+                        continue;
+
+                    token = tokenizer.RequestToken();
+                    if (token == nullptr)
+                    {
+                        throw JsonParsingFailedException(std::string(
+                            "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                            ", Column: " + std::to_string(token->ColumnNumber));
+                    }
+                    else if (token->Type != JsonQueryTokenType::ArrayClose)
+                    {
+                        throw JsonParsingFailedException(std::string(
+                            "Irrelevant token found. Token: \'") +
+                            token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                            ", Column: " + std::to_string(token->ColumnNumber));
+                    }
+
+                    return current->Value.QueryInternal(tokenizer);
+                }
+
+                return Json::Undefined;
+            }
+            else if (token->Type == JsonQueryTokenType::NumericLiteral)
+            {
+                if (this->GetType() != JsonType::Array)
+                    return Json::Undefined;
+
+                ssize_t index = std::atoll(token->Parameter.c_str());
+
+                if (index >= 0)
+                {
+                    if (index > this->ValueArray.size())
+                        return Json::Undefined;
+                }
+                else
+                {
+                    if (-index > this->ValueArray.size())
+                        return Json::Undefined;
+
+                    index = this->ValueArray.size() + index;
+                }
+
+                token = tokenizer.RequestToken();
+                if (token == nullptr)
+                {
+                    throw JsonParsingFailedException(std::string(
+                        "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
+                }
+                else if (token->Type != JsonQueryTokenType::ArrayClose)
+                {
+                    throw JsonParsingFailedException(
+                        std::string(
+                            "Irrelevant token found instead of closing array block ']'. Token: \'") +
+                            token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                            ", Column: " + std::to_string(token->ColumnNumber));
+                }
+
+                const Json& item = this->ValueArray[index];
+                return item.QueryInternal(tokenizer);
+            }
+            else
+            {
+                throw JsonParsingFailedException(
+                    std::string(
+                        "Irrelevant token found given as array/property index. Token: \'") +
+                        token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
+            }
+            break;
+
+        default:
+            throw JsonParsingFailedException(
+                std::string(
+                    "Irrelevant token found. Token: \'") +
+                token->Parameter + "', Line: " + std::to_string(token->LineNumber) +
+                ", Column: " + std::to_string(token->ColumnNumber));
+            // error
+            throw ("");
+            break;
+    }
+}
+
+void Json::ParseInternal(JsonTokenizer& tokenizer)
+{
+    const JsonToken* token = tokenizer.RequestToken();
+    if (token == nullptr)
+    {
+        throw JsonParsingFailedException(std::string(
+            "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+            ", Column: " + std::to_string(token->ColumnNumber));
+    }
+
     switch (token->Type)
     {
         case JsonTokenType::Identifier:
@@ -80,19 +226,33 @@ bool Json::ParseInternal(JsonTokenizer& parser)
         {
             SetType(JsonType::Object);
 
-            token = NEXT_TOKEN();
+            token = tokenizer.RequestToken();
+            if (token == nullptr)
+            {
+                throw JsonParsingFailedException(std::string(
+                    "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                    ", Column: " + std::to_string(token->ColumnNumber));
+            }
+
             if (token->Type == JsonTokenType::ObjectClose)
-                return true;
-            parser.DeferToken();
+                return;
+
+            tokenizer.DeferToken();
 
             while (true)
             {
                 this->ValueProperties.push_back(JsonProperty());
                 JsonProperty& newProperty = this->ValueProperties.back();
-                if (!newProperty.ParseInternal(parser))
-                    return false;
+                newProperty.ParseInternal(tokenizer);
 
-                token = NEXT_TOKEN();
+                token = tokenizer.RequestToken();
+                if (token == nullptr)
+                {
+                    throw JsonParsingFailedException(std::string(
+                        "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
+                }
+
                 if (token->Type == JsonTokenType::ObjectClose)
                 {
                     break;
@@ -118,20 +278,34 @@ bool Json::ParseInternal(JsonTokenizer& parser)
         {
             SetType(JsonType::Array);
 
-            token = NEXT_TOKEN();
+            token = tokenizer.RequestToken();
+            if (token == nullptr)
+            {
+                throw JsonParsingFailedException(std::string(
+                    "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                    ", Column: " + std::to_string(token->ColumnNumber));
+            }
+
             if (token->Type == JsonTokenType::ArrayClose)
-                return true;
-            parser.DeferToken();
+                return;
+
+            tokenizer.DeferToken();
 
             while (true)
             {
                 Json newValue;
                 this->ValueArray.push_back(Json());
                 Json& newItem = this->ValueArray.back();
-                if (!newItem.ParseInternal(parser))
-                    return false;
+                newItem.ParseInternal(tokenizer);
 
-                token = NEXT_TOKEN();
+                token = tokenizer.RequestToken();
+                if (token == nullptr)
+                {
+                    throw JsonParsingFailedException(std::string(
+                        "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
+                        ", Column: " + std::to_string(token->ColumnNumber));
+                }
+
                 if (token->Type == JsonTokenType::ArrayClose)
                 {
                     break;
@@ -152,8 +326,6 @@ bool Json::ParseInternal(JsonTokenizer& parser)
             break;
         }
     }
-
-    return true;
 }
 
 std::string Json::ToStringInternal(size_t tabDepth, const JsonToStringOptions& options)
@@ -487,6 +659,70 @@ void Json::Parse(const std::string& jsonText)
 std::string Json::ToString(const JsonToStringOptions& options) noexcept
 {
     return ToStringInternal(0, options);
+}
+
+Json& Json::Query(const std::string& query)
+{
+    JsonQueryTokenizer tokenizer;
+    tokenizer.Tokenize(query.c_str());
+
+    return const_cast<Json&>(QueryInternal(tokenizer));
+}
+
+const Json& Json::Query(const std::string& query) const
+{
+    JsonQueryTokenizer tokenizer;
+    tokenizer.Tokenize(query.c_str());
+
+    return QueryInternal(tokenizer);
+}
+
+const std::string& Json::QueryString(const std::string& query, const std::string& defaultValue) const
+{
+    try
+    {
+        const Json& value = Query(query);
+        if (value.GetType() != JsonType::String)
+            return defaultValue;
+
+        return value.GetString();
+    }
+    catch (...)
+    {
+        return defaultValue;
+    }
+}
+
+double Json::QueryNumeric(const std::string& query, double defaultValue) const
+{
+    try
+    {
+        const Json& value = Query(query);
+        if (value.GetType() != JsonType::Numeric)
+            return defaultValue;
+
+        return value.GetNumeric();
+    }
+    catch (...)
+    {
+        return defaultValue;
+    }
+}
+
+bool Json::QueryBoolean(const std::string& query, bool defaultValue) const
+{
+    try
+    {
+        const Json& value = Query(query);
+        if (value.GetType() != JsonType::Boolean)
+            return defaultValue;
+
+        return value.GetBoolean();
+    }
+    catch (...)
+    {
+        return defaultValue;
+    }
 }
 
 Json::Json() noexcept

@@ -13,28 +13,28 @@
   Github: https://www.github.com/orcun-gokbulut
 ****************************************************************/
 
-#include "JsonTokenizer.h"
+#include "JsonQueryTokenizer.h"
 
 #include "JsonExceptions.h"
 
 #include <string.h>
 
-void JsonToken::Reset()
+void JsonQueryToken::Reset()
 {
-    Type = JsonTokenType::Unknown;
+    Type = JsonQueryTokenType::Unknown;
     Parameter = "";
 }
 
-JsonToken::JsonToken()
+JsonQueryToken::JsonQueryToken()
 {
-    Type = JsonTokenType::Unknown;
+    Type = JsonQueryTokenType::Unknown;
     LineNumber = 1;
     ColumnNumber = 1;
 }
 
-void JsonTokenizer::Tokenize(const char* jsonText)
+void JsonQueryTokenizer::Tokenize(const char* jsonText)
 {
-    JsonToken token;
+    JsonQueryToken token;
 
     bool doubleQuote = false;
     bool numericHasDot = false;
@@ -51,11 +51,11 @@ void JsonTokenizer::Tokenize(const char* jsonText)
             token.ColumnNumber = 1;
         }
 
-        if (token.Type == JsonTokenType::StringLiteral)
+        if (token.Type == JsonQueryTokenType::StringLiteral)
         {
             if ((doubleQuote && current == '\"') || (!doubleQuote && current == '\''))
             {
-                token.Type = JsonTokenType::StringLiteral;
+                token.Type = JsonQueryTokenType::StringLiteral;
                 Tokens.push_back(token);
                 token.Reset();
             }
@@ -71,40 +71,40 @@ void JsonTokenizer::Tokenize(const char* jsonText)
                 case '\\':
                 case '\'':
                 {
-                    if (token.Type != JsonTokenType::Unknown)
+                    if (token.Type != JsonQueryTokenType::Unknown)
                     {
                         Tokens.push_back(token);
                         token.Reset();
                     }
 
-                    token.Type = JsonTokenType::StringLiteral;
+                    token.Type = JsonQueryTokenType::StringLiteral;
                     doubleQuote = false;
                     break;
                 }
 
                 case '\"':
                 {
-                    if (token.Type != JsonTokenType::Unknown)
+                    if (token.Type != JsonQueryTokenType::Unknown)
                     {
                         Tokens.push_back(token);
                         token.Reset();
                     }
 
-                    token.Type = JsonTokenType::StringLiteral;
+                    token.Type = JsonQueryTokenType::StringLiteral;
                     doubleQuote = true;
                     break;
                 }
 
-                case ',':
+                case '.':
                 {
-                    if (token.Type != JsonTokenType::Unknown)
+                    if (token.Type != JsonQueryTokenType::Unknown)
                     {
                         Tokens.push_back(token);
                         token.Reset();
                     }
 
-                    token.Type = JsonTokenType::Comma;
-                    token.Parameter = ",";
+                    token.Type = JsonQueryTokenType::PropertyAccess;
+                    token.Parameter = ".";
                     Tokens.push_back(token);
                     token.Reset();
                     break;
@@ -116,68 +116,23 @@ void JsonTokenizer::Tokenize(const char* jsonText)
                 case '\r':
                 case '\f':
                 {
-                    if (token.Type != JsonTokenType::Unknown)
+                    if (token.Type != JsonQueryTokenType::Unknown)
                     {
                         Tokens.push_back(token);
                         token.Reset();
                     }
-                    break;
-                }
-
-                case ':':
-                {
-                    if (token.Type != JsonTokenType::Unknown)
-                    {
-                        Tokens.push_back(token);
-                        token.Reset();
-                    }
-
-                    token.Type = JsonTokenType::Assingment;
-                    token.Parameter = ":";
-                    Tokens.push_back(token);
-                    token.Reset();
-                    break;
-                }
-
-                case '{':
-                {
-                    if (token.Type != JsonTokenType::Unknown)
-                    {
-                        Tokens.push_back(token);
-                        token.Reset();
-                    }
-
-                    token.Type = JsonTokenType::ObjectOpen;
-                    token.Parameter = "{";
-                    Tokens.push_back(token);
-                    token.Reset();
-                    break;
-                }
-
-                case '}':
-                {
-                    if (token.Type != JsonTokenType::Unknown)
-                    {
-                        Tokens.push_back(token);
-                        token.Reset();
-                    }
-
-                    token.Type = JsonTokenType::ObjectClose;
-                    token.Parameter = "}";
-                    Tokens.push_back(token);
-                    token.Reset();
                     break;
                 }
 
                 case '[':
                 {
-                    if (token.Type != JsonTokenType::Unknown)
+                    if (token.Type != JsonQueryTokenType::Unknown)
                     {
                         Tokens.push_back(token);
                         token.Reset();
                     }
 
-                    token.Type = JsonTokenType::ArrayOpen;
+                    token.Type = JsonQueryTokenType::ArrayOpen;
                     token.Parameter = "[";
                     Tokens.push_back(token);
                     token.Reset();
@@ -186,13 +141,13 @@ void JsonTokenizer::Tokenize(const char* jsonText)
 
                 case ']':
                 {
-                    if (token.Type != JsonTokenType::Unknown)
+                    if (token.Type != JsonQueryTokenType::Unknown)
                     {
                         Tokens.push_back(token);
                         token.Reset();
                     }
 
-                    token.Type = JsonTokenType::ArrayClose;
+                    token.Type = JsonQueryTokenType::ArrayClose;
                     token.Parameter = "]";
                     Tokens.push_back(token);
                     token.Reset();
@@ -201,15 +156,15 @@ void JsonTokenizer::Tokenize(const char* jsonText)
 
                 default:
                 {
-                    if (token.Type == JsonTokenType::Unknown)
+                    if (token.Type == JsonQueryTokenType::Unknown)
                     {
                         if (isdigit(current) != 0 || current == '-')
                         {
-                            token.Type = JsonTokenType::NumericLiteral;
+                            token.Type = JsonQueryTokenType::NumericLiteral;
                         }
                         else if (isalpha(current) != 0 || current == '_')
                         {
-                            token.Type = JsonTokenType::Identifier;
+                            token.Type = JsonQueryTokenType::Identifier;
                         }
                         else
                         {
@@ -218,7 +173,7 @@ void JsonTokenizer::Tokenize(const char* jsonText)
                                 ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
-                    else if (token.Type == JsonTokenType::NumericLiteral)
+                    else if (token.Type == JsonQueryTokenType::NumericLiteral)
                     {
                         if ((isdigit(current) == 0 && current != '.') ||
                             (current == '.' && token.Parameter.find('.') != std::string::npos))
@@ -229,7 +184,7 @@ void JsonTokenizer::Tokenize(const char* jsonText)
                                 ", Column: " + std::to_string(token.ColumnNumber));
                         }
                     }
-                    else if (token.Type == JsonTokenType::Identifier)
+                    else if (token.Type == JsonQueryTokenType::Identifier)
                     {
                         if (isalnum(current) == 0 && current != '_')
                         {
@@ -246,26 +201,32 @@ void JsonTokenizer::Tokenize(const char* jsonText)
         }
     }
 
+    if (token.Type != JsonQueryTokenType::Unknown)
+    {
+        Tokens.push_back(token);
+        token.Reset();
+    }
+
     Current = (Tokens.size() != 0 ? &Tokens[0] : nullptr);
 }
 
-const JsonToken* JsonTokenizer::RequestToken()
+const JsonQueryToken* JsonQueryTokenizer::RequestToken()
 {
     if (Current == Tokens.end().base())
         return nullptr;
 
-    JsonToken* temp = Current;
+    JsonQueryToken* temp = Current;
     Current++;
 
     return temp;
 }
 
-void JsonTokenizer::DeferToken()
+void JsonQueryTokenizer::DeferToken()
 {
     Current--;
 }
 
-JsonTokenizer::JsonTokenizer()
+JsonQueryTokenizer::JsonQueryTokenizer()
 {
     Current = nullptr;
 }

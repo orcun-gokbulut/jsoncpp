@@ -20,6 +20,8 @@ list(APPEND PublicHeaders Json.h)
 list(APPEND Sources JsonProperty.cpp)
 list(APPEND Sources JsonTokenizer.cpp)
 list(APPEND Headers JsonTokenizer.h)
+list(APPEND Sources JsonQueryTokenizer.cpp)
+list(APPEND Headers JsonQueryTokenizer.h)
 list(APPEND Sources JsonExceptions.cpp)
 list(APPEND PublicHeaders JsonExceptions.h)
 

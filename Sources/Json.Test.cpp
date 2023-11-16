@@ -452,3 +452,57 @@ TEST_CASE("Json::Parse")
     REQUIRE(a.GetObjectProperty("Array Property").GetType() == JsonType::Array);
     REQUIRE(a.GetObjectProperty("Array Property").GetArrayItems().size() == 9);
 }
+
+TEST_CASE("Json::Query")
+{
+
+    const char* jsonText = R"(
+        {
+            "Property1": "StringValue",
+            "Property2": 123,
+            "Property3": true,
+            "Property With Spaces":
+            [
+                1234,
+                true,
+                "StringItem"
+            ],
+            "NestedProperty":
+            {
+                "SubProperty1": "StringValue",
+                "SubProperty2": 12345,
+                "SubProperty3": false
+            }
+        }
+    )";
+
+    Json a;
+    a.Parse(jsonText);
+    REQUIRE(a.Query("").GetType() == JsonType::Object);
+    REQUIRE(a.Query("").GetObjectProperty("Property1").GetString() == "StringValue");
+    REQUIRE(a.Query(" \t \n").GetType() == JsonType::Object);
+    REQUIRE(a.Query(" \t \n").GetObjectProperty("Property1").GetString() == "StringValue");
+    REQUIRE(a.Query("Property1").GetString() == "StringValue");
+    REQUIRE(a.Query(" \nProperty2  ").GetNumeric() == 123);
+    REQUIRE(a.Query(" \t \n \t Property3 \t \n").GetBoolean() == true);
+    REQUIRE(a.Query("NestedProperty").GetObjectProperties().size() == 3);
+
+    REQUIRE_NOTHROW(a.Query("Property4").IsUndefined());
+    REQUIRE_NOTHROW(a.Query("Property1.UnknownProperty").IsUndefined());
+    REQUIRE_NOTHROW(a.Query("Property1[0]").IsUndefined());
+    REQUIRE_NOTHROW(a.Query("Property1[\"UnknownProperty\"]").IsUndefined());
+
+    REQUIRE_THROWS("[");
+    REQUIRE_THROWS(".");
+    REQUIRE_THROWS("]");
+    REQUIRE_THROWS("NestedProperty.");
+    REQUIRE_THROWS("NestedProperty. \t");
+    REQUIRE_THROWS("NestedProperty. \n 22 \t");
+    REQUIRE_THROWS("NestedProperty[");
+    REQUIRE_THROWS("NestedProperty]");
+
+    REQUIRE_THROWS(a.Query("+"));
+
+    Json& e = a.Query("[\"Property2\"]");
+    Json& f = a.Query("NestedProperty \t . \n\t SubProperty1");
+}
