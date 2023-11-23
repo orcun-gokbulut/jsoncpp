@@ -27,7 +27,7 @@
                 "-DCMAKE_BUILD_TYPE=Debug",
                 "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/Output",
                 "-DJSONCPP_BUILD_TESTS=yes",
-                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=true",
                 "${workspaceFolder}"
             ],
 
@@ -55,7 +55,7 @@
                 "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
                 "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/Output",
                 "-DJSONCPP_BUILD_TESTS=yes",
-                "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=true",
                 "${workspaceFolder}"
             ],
 
@@ -162,6 +162,23 @@
             "args": [
                 "--install",
                 "${workspaceFolder}/Build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/Build"
+            },
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "showReuseMessage": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Package",
+            "type": "shell",
+            "command": "cpack",
+            "args": [
+                "-B", "${workspaceFolder}/Output"
             ],
             "options": {
                 "cwd": "${workspaceFolder}/Build"

@@ -25,23 +25,48 @@ list(APPEND Headers JsonQueryTokenizer.h)
 list(APPEND Sources JsonExceptions.cpp)
 list(APPEND PublicHeaders JsonExceptions.h)
 
+if(JSONCPP_BUILD_STATIC)
+    add_library(jsoncpp-static)
+    target_sources(jsoncpp-static PRIVATE ${Sources} ${Headers} ${PublicHeaders})
+    set_target_properties(jsoncpp-static PROPERTIES PUBLIC_HEADER "${PublicHeaders}")
+    set_target_properties(jsoncpp-static PROPERTIES OUTPUT_NAME "jsoncpp")
+    target_include_directories(jsoncpp-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+    if(PROJECT_IS_TOP_LEVEL)
+        install(
+            TARGETS jsoncpp-static
+            COMPONENT dev-static
+        )
+    endif()
+endif()
 
 if(JSONCPP_BUILD_SHARED)
-    add_library(jsoncpp SHARED)
-else()
-    add_library(jsoncpp)
+    add_library(jsoncpp-shared SHARED)
+    target_sources(jsoncpp-shared PRIVATE ${Sources} ${Headers} ${PublicHeaders})
+    target_include_directories(jsoncpp-shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+    set_target_properties(jsoncpp-shared PROPERTIES PUBLIC_HEADER "${PublicHeaders}")
+    set_target_properties(jsoncpp-shared PROPERTIES OUTPUT_NAME "jsoncpp")
+    set_target_properties(jsoncpp-shared PROPERTIES SOVERSION 1)
+
+    if(PROJECT_IS_TOP_LEVEL)
+        install(
+            TARGETS jsoncpp-shared
+                RUNTIME
+                    COMPONENT runtime
+                PUBLIC_HEADER
+                    COMPONENT dev
+                    DESTINATION include
+                LIBRARY
+                    COMPONENT runtime
+                    DESTINATION lib/${CMAKE_LIBRARY_ARCHITECTURE}
+                    NAMELINK_COMPONENT dev
+        )
+    endif()
 endif()
 
-target_sources(jsoncpp PRIVATE ${Sources} ${Headers} ${PublicHeaders})
-set_target_properties(jsoncpp PROPERTIES PUBLIC_HEADER "${PublicHeaders}")
-target_include_directories(jsoncpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-if(PROJECT_IS_TOP_LEVEL)
-    install(TARGETS jsoncpp)
-endif()
-
-if(JSONCPP_BUILD_TESTS)
+if(JSONCPP_BUILD_TESTS AND JSONCPP_CATCH2_AVAILABLE)
     add_executable(jsoncpp.test Json.Test.cpp)
-    target_link_libraries(jsoncpp.test jsoncpp Catch2 Catch2WithMain)
+    target_link_libraries(jsoncpp.test jsoncpp-shared Catch2 Catch2WithMain)
     add_test(NAME Json COMMAND $<TARGET_FILE:jsoncpp.test>)
 endif()

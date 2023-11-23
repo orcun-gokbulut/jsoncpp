@@ -79,9 +79,7 @@ const Json& Json::QueryInternal(JsonQueryTokenizer& tokenizer) const
             token = tokenizer.RequestToken();
             if (token == nullptr)
             {
-                throw JsonParsingFailedException(std::string(
-                    "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                    ", Column: " + std::to_string(token->ColumnNumber));
+                throw JsonParsingFailedException(std::string("Unexpected end of query."));
             }
 
             if (token->Type == JsonQueryTokenType::StringLiteral)
@@ -97,9 +95,7 @@ const Json& Json::QueryInternal(JsonQueryTokenizer& tokenizer) const
                     token = tokenizer.RequestToken();
                     if (token == nullptr)
                     {
-                        throw JsonParsingFailedException(std::string(
-                            "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                            ", Column: " + std::to_string(token->ColumnNumber));
+                        throw JsonParsingFailedException(std::string("Unexpected end of query."));
                     }
                     else if (token->Type != JsonQueryTokenType::ArrayClose)
                     {
@@ -137,9 +133,8 @@ const Json& Json::QueryInternal(JsonQueryTokenizer& tokenizer) const
                 token = tokenizer.RequestToken();
                 if (token == nullptr)
                 {
-                    throw JsonParsingFailedException(std::string(
-                        "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                        ", Column: " + std::to_string(token->ColumnNumber));
+                    throw JsonParsingFailedException(std::string("Unexpected end of query."));
+
                 }
                 else if (token->Type != JsonQueryTokenType::ArrayClose)
                 {
@@ -179,11 +174,7 @@ void Json::ParseInternal(JsonTokenizer& tokenizer)
 {
     const JsonToken* token = tokenizer.RequestToken();
     if (token == nullptr)
-    {
-        throw JsonParsingFailedException(std::string(
-            "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-            ", Column: " + std::to_string(token->ColumnNumber));
-    }
+        throw JsonParsingFailedException(std::string("Unexpected end of query."));
 
     switch (token->Type)
     {
@@ -228,11 +219,7 @@ void Json::ParseInternal(JsonTokenizer& tokenizer)
 
             token = tokenizer.RequestToken();
             if (token == nullptr)
-            {
-                throw JsonParsingFailedException(std::string(
-                    "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                    ", Column: " + std::to_string(token->ColumnNumber));
-            }
+                throw JsonParsingFailedException(std::string("Unexpected end of query."));
 
             if (token->Type == JsonTokenType::ObjectClose)
                 return;
@@ -247,11 +234,7 @@ void Json::ParseInternal(JsonTokenizer& tokenizer)
 
                 token = tokenizer.RequestToken();
                 if (token == nullptr)
-                {
-                    throw JsonParsingFailedException(std::string(
-                        "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                        ", Column: " + std::to_string(token->ColumnNumber));
-                }
+                    throw JsonParsingFailedException(std::string("Unexpected end of query."));
 
                 if (token->Type == JsonTokenType::ObjectClose)
                 {
@@ -280,11 +263,8 @@ void Json::ParseInternal(JsonTokenizer& tokenizer)
 
             token = tokenizer.RequestToken();
             if (token == nullptr)
-            {
-                throw JsonParsingFailedException(std::string(
-                    "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                    ", Column: " + std::to_string(token->ColumnNumber));
-            }
+                throw JsonParsingFailedException(std::string("Unexpected end of query."));
+
 
             if (token->Type == JsonTokenType::ArrayClose)
                 return;
@@ -300,11 +280,8 @@ void Json::ParseInternal(JsonTokenizer& tokenizer)
 
                 token = tokenizer.RequestToken();
                 if (token == nullptr)
-                {
-                    throw JsonParsingFailedException(std::string(
-                        "Unexpected end of query. Line: ") + std::to_string(token->LineNumber) +
-                        ", Column: " + std::to_string(token->ColumnNumber));
-                }
+                    throw JsonParsingFailedException(std::string("Unexpected end of query."));
+
 
                 if (token->Type == JsonTokenType::ArrayClose)
                 {

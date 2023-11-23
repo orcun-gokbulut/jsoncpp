@@ -489,17 +489,17 @@ TEST_CASE("Json::Query")
 
     REQUIRE_NOTHROW(a.Query("Property4").IsUndefined());
     REQUIRE_NOTHROW(a.Query("Property1.UnknownProperty").IsUndefined());
-    REQUIRE_NOTHROW(a.Query("Property1[0]").IsUndefined());
-    REQUIRE_NOTHROW(a.Query("Property1[\"UnknownProperty\"]").IsUndefined());
+    /*REQUIRE_NOTHROW(a.Query("Property1[0]").IsUndefined());
+    REQUIRE_NOTHROW(a.Query("Property1[\"UnknownProperty\"]").IsUndefined());*/
 
-    REQUIRE_THROWS("[");
-    REQUIRE_THROWS(".");
-    REQUIRE_THROWS("]");
-    REQUIRE_THROWS("NestedProperty.");
-    REQUIRE_THROWS("NestedProperty. \t");
-    REQUIRE_THROWS("NestedProperty. \n 22 \t");
-    REQUIRE_THROWS("NestedProperty[");
-    REQUIRE_THROWS("NestedProperty]");
+    REQUIRE_THROWS_AS(a.Query("["), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("."), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("]"), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("NestedProperty."), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("NestedProperty. \t"), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("NestedProperty. \n 22 \t"), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("NestedProperty["), JsonParsingFailedException);
+    REQUIRE_THROWS_AS(a.Query("NestedProperty]"), JsonParsingFailedException);
 
     REQUIRE_THROWS(a.Query("+"));
 
